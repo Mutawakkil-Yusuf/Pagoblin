@@ -3,6 +3,7 @@ import "./globals.css";
 import { ToastHost } from "@/components/ui/ToastHost";
 import { MotionPreference } from "@/components/MotionPreference";
 import { SoundBoot } from "@/components/SoundBoot";
+import { DiagHook } from "@/components/diag/DiagHook";
 
 // Brand fonts are self-hosted via @font-face in globals.css — no runtime
 // Google Fonts request (CSP stays `connect-src 'self'`), and builds work
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <MotionPreference>
           <SoundBoot />
+          <DiagHook />
           {children}
           <ToastHost />
         </MotionPreference>

@@ -7,7 +7,7 @@
  */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { filesFromTransfer, makeFileItems, type FileItem, type FileKind, fileErrors } from "@/lib/files";
+import { filesFromTransfer, makeFileItems, pickFiles, type FileItem, type FileKind, fileErrors } from "@/lib/files";
 import { usePipEvents } from "@/lib/store/pip";
 import { sound } from "@/lib/sound";
 import { haptic } from "@/lib/haptics";
@@ -45,7 +45,6 @@ export function DropZone(props: {
     },
     [accept, gulp, onFiles],
   );
-
   // Paste support on the whole window while this zone is mounted.
   useEffect(() => {
     if (disabled) return;
@@ -154,19 +153,19 @@ function VisuallyHiddenPicker(props: {
   accept: FileKind[];
   onFiles: (items: File[]) => void | Promise<void>;
 }) {
+  // The picker must open inside the same user activation: no dynamic import
+  // inside the click handler. pickFiles is statically imported at the top.
   return (
     <button
       type="button"
       className="min-h-[44px] rounded-pill px-4 text-small font-bold text-amber underline-offset-4 hover:underline"
-      onClick={async () => {
-        const { pickFiles } = await import("@/lib/files");
+      onClick={() => {
         const acceptStr = props.accept.includes("image")
           ? "application/pdf,image/*"
           : props.accept.includes("text")
             ? "application/pdf,image/*,text/plain"
             : ".pdf,application/pdf";
-        const files = await pickFiles({ accept: acceptStr, multiple: true });
-        await props.onFiles(files);
+        void pickFiles({ accept: acceptStr, multiple: true }).then(async (files) => props.onFiles(files));
       }}
     >
       Browse files

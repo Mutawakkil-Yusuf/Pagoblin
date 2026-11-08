@@ -40,10 +40,12 @@ function activeFor(pathname: string): string {
 
 function PhoneNav({ pathname }: { pathname: string }) {
   const active = activeFor(pathname);
+  const soundOn = useSettings((s) => s.soundOn);
+  const setSoundOn = useSettings((s) => s.setSoundOn);
   return (
     <nav
       aria-label="App sections"
-      className="md:hidden fixed bottom-[10px] left-[10px] z-40 flex gap-0.5 rounded-[36px] border border-line bg-surface px-1.5 py-1.5 shadow-pop"
+      className="md:hidden fixed bottom-[10px] left-[10px] z-40 flex items-center gap-0.5 rounded-[36px] border border-line bg-surface px-1.5 py-1.5 shadow-pop"
     >
       <LayoutGroup id="phone-nav">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
@@ -74,6 +76,35 @@ function PhoneNav({ pathname }: { pathname: string }) {
           );
         })}
       </LayoutGroup>
+      {/* divider + sound + settings, always reachable on phone */}
+      <span aria-hidden="true" className="mx-1 h-[26px] w-px bg-line" />
+      <button
+        type="button"
+        aria-label={soundOn ? "Turn sound off" : "Turn sound on"}
+        aria-pressed={soundOn}
+        className="flex h-[50px] w-[44px] items-center justify-center rounded-[25px] text-muted"
+        onClick={() => {
+          setSoundOn(!soundOn);
+          sound.play(soundOn ? "toggle-off" : "toggle-on");
+          haptic("tap");
+        }}
+      >
+        {soundOn ? <IconSoundOn /> : <IconSoundOff />}
+      </button>
+      <Link
+        href="/settings"
+        aria-label="Settings"
+        aria-current={pathname.startsWith("/settings") ? "page" : undefined}
+        className={`flex h-[50px] w-[44px] items-center justify-center rounded-[25px] ${
+          pathname.startsWith("/settings") ? "bg-amber text-ink" : "text-muted"
+        }`}
+        onClick={() => {
+          sound.play("pop");
+          haptic("tap");
+        }}
+      >
+        <IconGear />
+      </Link>
     </nav>
   );
 }
