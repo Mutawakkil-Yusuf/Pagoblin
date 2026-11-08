@@ -11,8 +11,13 @@ const analytics = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN ? ` ${plausibleHost}`
 // the privacy e2e test enforces this at runtime.
 const csp = [
   `default-src 'self'`,
-  // 'wasm-unsafe-eval' is required to instantiate Emscripten/JS engines (Ghostscript WASM) in workers.
-  `script-src 'self' 'wasm-unsafe-eval'${analytics}`,
+  // 'wasm-unsafe-eval' is required to instantiate Emscripten/JS engines (Ghostscript WASM)
+  // in workers. 'unsafe-inline' is required by the App Router's inline RSC bootstrap
+  // scripts: every page stays statically prerendered (offline-first) instead of going
+  // dynamic for per-request nonces. There is no server-rendered user data, so the
+  // reachable XSS surface stays nil; the hard guarantees (connect-src 'self',
+  // zero third origins) are unaffected and enforced by the privacy e2e.
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${analytics}`,
   `style-src 'self' 'unsafe-inline'`,
   `img-src 'self' data: blob:`,
   `media-src 'self' data: blob:`,
@@ -24,7 +29,7 @@ const csp = [
   `form-action 'none'`,
   `frame-ancestors 'none'`,
   // Dev needs eval for the react-refresh runtime; production keeps the strict policy.
-  isDev ? `script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'${analytics}` : "",
+  isDev ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'${analytics}` : "",
 ].join("; ");
 
 const withSerwistInstance = withSerwist({

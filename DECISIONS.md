@@ -108,3 +108,7 @@ Ongoing log. Newest at the bottom of each section. Read top to bottom.
 ## Phase 5 build-day decisions (appended)
 
 - The privacy e2e lives at tests/e2e/privacy.spec.ts + playwright.config.ts: generates a marker-carrying PDF (pdf-lib), drops it into compress, runs, then walks every captured request asserting same-origin + no marker in any body. `npm run e2e` expects a machine that can run chromium (this ARM box cannot; see the browser note above).
+
+## Deployment fix (appended)
+
+- Vercel deploy rendered blank: the strict `script-src 'self' 'wasm-unsafe-eval'` CSP blocked the App Router's inline `self.__next_f.push` bootstrap scripts, so hydration never started — and with motion components holding SSR'd `opacity:0` initial states, the page stayed invisible forever. Fix: allow `'unsafe-inline'` in script-src. Rationale: nonce-based CSP would force every route dynamic (breaking static prerender + the offline precache), and there is no server-rendered user data anywhere, so the added XSS surface is nil while the real guarantees (connect-src 'self', zero third origins, no upload path) are unchanged and still enforced by the e2e privacy guard.
