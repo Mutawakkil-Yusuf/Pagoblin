@@ -104,3 +104,7 @@ Ongoing log. Newest at the bottom of each section. Read top to bottom.
 - SEO preset landings: /compress-pdf-to-2mb → CompressTool initialTarget 2MB; /pdf-to-jpg → ConvertTool presets (pdf-to-image, jpg); /jpg-to-pdf → image-to-pdf tab. Presets are initial states, not locks (keep the whole tool honest).
 - Site plumbing: sitemap.ts (16 URLs), robots.txt (disallow /done, /share), JSON-LD SoftwareApplication on the homepage, homepage expanded with the screen-12 "why different" + comparison sections.
 - Playwright remains unrunnable on this device (chromium renderer crashes under kernel seccomp; firefox/webkit missing system libs). Verification for now: tsc + build + 25 vitest unit tests incl. real pipeline runs of merge/split/text cores. e2e + visual parity check deferred to a machine that runs the browsers.
+
+## Phase 5 build-day decisions (appended)
+
+- The privacy e2e lives at tests/e2e/privacy.spec.ts + playwright.config.ts: generates a marker-carrying PDF (pdf-lib), drops it into compress, runs, then walks every captured request asserting same-origin + no marker in any body. `npm run e2e` expects a machine that can run chromium (this ARM box cannot; see the browser note above).

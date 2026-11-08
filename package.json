@@ -12,7 +12,8 @@
     "icons": "node scripts/generate-icons.mjs",
     "lighthouse": "lhci autorun",
     "postinstall": "node scripts/copy-pdfjs.mjs && node scripts/copy-gs.mjs && node scripts/patch-nft.mjs",
-    "prepare": ""
+    "prepare": "",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
