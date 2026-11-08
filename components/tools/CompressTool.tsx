@@ -29,7 +29,8 @@ const TARGETS: { label: string; bytes: number | null }[] = [
   { label: "Smallest", bytes: null },
 ];
 
-export function CompressTool() {
+export function CompressTool(props: { initialTarget?: number | null }) {
+  const { initialTarget } = props;
   const files = useToolFiles((s) => s.files.compress);
   const add = useToolFiles((s) => s.add);
   const remove = useToolFiles((s) => s.remove);
@@ -39,7 +40,9 @@ export function CompressTool() {
   const setResult = useDoneStore((s) => s.setResult);
   const router = useRouter();
 
-  const [target, setTarget] = useState<number | null>(TARGETS[1].bytes);
+  const [target, setTarget] = useState<number | null>(
+    initialTarget === undefined ? TARGETS[1].bytes : initialTarget,
+  );
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState("");

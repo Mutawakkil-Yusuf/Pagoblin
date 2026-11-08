@@ -16,8 +16,20 @@ const TOOLS = [
 ] as const;
 
 export default function Home() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Pagoblin",
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Any (runs in the browser)",
+    description:
+      "Free, private PDF toolkit. Merge, split, compress and sign PDFs in your browser — files never leave your device.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  };
   return (
     <main className="min-h-dvh bg-ink text-cream">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
       <header className="mx-auto flex max-w-[1200px] items-center justify-between px-page-x py-5">
         <div className="flex items-center gap-2.5">
           <MiniMark />
@@ -67,6 +79,41 @@ export default function Home() {
               <div className="mt-1 text-body text-muted">{t.sub}</div>
             </Link>
           ))}
+        </div>
+      </section>
+
+      <section id="why" className="mx-auto max-w-[1200px] px-page-x pb-24">
+        <h2 className="font-display text-h2 font-extrabold">Why Pagoblin is different</h2>
+        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+          {[
+            { t: "Private by design", d: "Your files are processed on your device. We never see them, store them or upload them." },
+            { t: "No ads, no signup", d: "Open it and use it. No accounts, no watermarks, no daily limits." },
+            { t: "Hits the exact size", d: "Need under 2 MB for a visa portal? Say the number and Pip squeezes to fit." },
+          ].map((c) => (
+            <div key={c.t} className="rounded-card-l border border-line bg-surface p-6">
+              <div className="font-display text-h3 font-extrabold">{c.t}</div>
+              <p className="mt-2 text-body text-muted">{c.d}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="rounded-card-l border border-line bg-surface p-6">
+            <h3 className="font-display text-h3 font-extrabold">Typical PDF sites</h3>
+            <ul className="mt-3 space-y-2 text-body text-muted">
+              <li>Upload your files to a server</li>
+              <li>Daily task limits</li>
+              <li>Ads and upsell pop-ups</li>
+            </ul>
+          </div>
+          <div className="rounded-card-l border-2 border-amber bg-surface p-6">
+            <h3 className="font-display text-h3 font-extrabold text-amber">Pagoblin</h3>
+            <ul className="mt-3 space-y-2 text-body">
+              <li>Files never leave your device</li>
+              <li>No daily limits</li>
+              <li>Zero ads</li>
+            </ul>
+          </div>
         </div>
       </section>
 

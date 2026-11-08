@@ -45,7 +45,8 @@ const FORMATS: { key: "png" | "jpg" | "webp"; label: string }[] = [
   { key: "webp", label: "WebP" },
 ];
 
-export function ConvertTool() {
+export function ConvertTool(props: { initialTab?: Tab; initialFormat?: "png" | "jpg" | "webp" }) {
+  const { initialTab, initialFormat } = props;
   const files = useToolFiles((s) => s.files.convert);
   const add = useToolFiles((s) => s.add);
   const remove = useToolFiles((s) => s.remove);
@@ -55,8 +56,8 @@ export function ConvertTool() {
   const setResult = useDoneStore((s) => s.setResult);
   const router = useRouter();
 
-  const [tab, setTab] = useState<Tab>("pdf-to-image");
-  const [format, setFormat] = useState<"png" | "jpg" | "webp">("jpg");
+  const [tab, setTab] = useState<Tab>(initialTab ?? "pdf-to-image");
+  const [format, setFormat] = useState<"png" | "jpg" | "webp">(initialFormat ?? "jpg");
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
