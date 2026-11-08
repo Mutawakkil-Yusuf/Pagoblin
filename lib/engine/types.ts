@@ -75,7 +75,8 @@ export type SignPlaceInput = {
   signaturePng: ArrayBuffer; // RGBA PNG bytes
   placements: {
     pageIndex: number;
-    // Rect in PDF user units (points), origin bottom left
+    // Fraction of the page (top-left origin) — the worker converts to
+    // PDF user units (bottom-left origin) using the real page size.
     x: number;
     y: number;
     width: number;
