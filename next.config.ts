@@ -39,6 +39,20 @@ const withSerwistInstance = withSerwist({
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Emscripten modules (gs.wasm glue) probe for node builtins at parse time;
+  // in the browser we answer with empty stubs.
+  webpack: (config) => {
+    config.resolve = config.resolve ?? {};
+    config.resolve.fallback = {
+      ...(config.resolve.fallback ?? {}),
+      fs: false,
+      module: false,
+      path: false,
+      util: false,
+      crypto: false,
+    };
+    return config;
+  },
   headers: async () => [
     {
       source: "/(.*)",

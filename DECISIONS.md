@@ -85,3 +85,12 @@ Ongoing log. Newest at the bottom of each section. Read top to bottom.
 - Welcome overlay (screen 01) renders over `/app` until `welcomeSeen` (persisted); two scroll-snap slides, chips copy straight from the screen HTML. Add-button action sheet narrows `accept` by active route via `lib/toolRouting.ts`.
 - `/` gets a minimal-but-valid dark landing for Phase 1 (`app/page.tsx`); the full SEO homepage is Phase 5 as planned.
 - Unit tests (vitest) cover format, ranges, and the compress target-size search driver (18 passing). Playwright e2e lands with the privacy test in Phase 2.
+
+## Phase 2 build-day decisions (appended)
+
+- Split (screen 06): three modes in flex-1 chips; pick-mode shows real thumbnail renders (3-across cream cards, 3px orange outline with offset, check bubble top-right, number bottom-left), "N of 9 pages selected" status with aria-live, button label "Split N pages". Ranges mode: parseRanges tokens (open ends resolve at parse time), single "page" tokens become {start:page,end:page} so "5" alone still yields one PDF.
+- Compress (screen 04): targets 1/2/5 MB + "Smallest" (target=null). No fabricated estimates shown pre-run — the card explains Pip tries real recipes (engine A GS rasterisation, engine B flatten fallback) and the done screen shows measured sizes only.
+- Convert (screen 08): tabs PDF→image (PNG/JPG/WebP, quality 0.92 @ scale 2), Image→PDF (fit pages, 6% padding), Text→PDF (A4 wrap, WinAnsi-stripped Helvetica). Locked "Word" chip carries the screen's honesty copy: server needed, arrives as Pro extra.
+- Playwright cannot run on this device: chromium renders crash ("Target crashed"/ERR_ABORTED even for data: URLs — kernel seccomp against renderer syscalls), firefox/webkit missing system libs. Verification therefore: tsc, next build, vitest — plus new *node-safe impl modules*.
+- Engine restructure for testability: merge/split/textToPdf cores moved to `lib/engine/impl/*.ts` (node-safe, no exposeJobs), workers now thin wrappers. New `tests/unit/pipeline.test.ts` runs the REAL worker cores against generated PDFs (merge order, pick/ranges/every split shapes, PDF header, pagination). 25 unit tests green.
+- Landing pages for split/compress/convert built with ToolLanding + per-tool FAQ; metadata + canonical per AGENTS SEO pattern.

@@ -61,10 +61,14 @@ type AnyApi = {
   cancel: () => void;
 };
 
-/** Spawn a fresh worker per job, terminate after. Paths are literals so the bundler can extract them. */
-function makeJobRunner<I, O>(workerPath: string, kind: string): JobRunner<I, O> {
+/**
+ * Spawn a fresh worker per job, terminate after. Each call site passes a
+ * factory whose body contains the literal `new Worker(new URL(...))` —
+ * webpack needs that literal expression to statically extract the chunk.
+ */
+function makeJobRunner<I, O>(makeWorker: () => Worker, kind: string): JobRunner<I, O> {
   return async (input, { onProgress } = {}) => {
-    const worker = new Worker(new URL(workerPath, import.meta.url), { type: "module" });
+    const worker = makeWorker();
     const api = Comlink.wrap<Comlink.Remote<AnyApi>>(worker);
     const progressProxy = Comlink.proxy((p: number, label?: string) => {
       onProgress?.(p, label);
@@ -90,27 +94,26 @@ function makeJobRunner<I, O>(workerPath: string, kind: string): JobRunner<I, O> 
   };
 }
 
-const literal = <T extends string>(p: T): T => p;
+const mkMerge = (): Worker => new Worker(new URL("./workers/merge.worker.ts", import.meta.url), { type: "module" });
+const mkSplit = (): Worker => new Worker(new URL("./workers/split.worker.ts", import.meta.url), { type: "module" });
+const mkCompress = (): Worker => new Worker(new URL("./workers/compress.worker.ts", import.meta.url), { type: "module" });
+const mkConvert = (): Worker => new Worker(new URL("./workers/convert.worker.ts", import.meta.url), { type: "module" });
+const mkPdfTool = (): Worker => new Worker(new URL("./workers/pdf-tool.worker.ts", import.meta.url), { type: "module" });
+const mkThumbs = (): Worker => new Worker(new URL("./workers/thumbs.worker.ts", import.meta.url), { type: "module" });
 
-export const WORKERS = {
-  merge: literal("./workers/merge.worker.ts"),
-  split: literal("./workers/split.worker.ts"),
-  compress: literal("./workers/compress.worker.ts"),
-  convert: literal("./workers/convert.worker.ts"),
-  pdfTool: literal("./workers/pdf-tool.worker.ts"),
-  thumbs: literal("./workers/thumbs.worker.ts"),
-} as const;
+const mk = { merge: mkMerge, split: mkSplit, compress: mkCompress, convert: mkConvert, pdfTool: mkPdfTool, thumbs: mkThumbs };
+export const WORKERS = Object.keys(mk);
 
-export const runMerge = makeJobRunner<MergeInput, MergeOutput>(WORKERS.merge, "merge");
-export const runSplit = makeJobRunner<SplitInput, SplitOutput>(WORKERS.split, "split");
-export const runCompress = makeJobRunner<CompressInput, CompressOutput>(WORKERS.compress, "compress");
-export const runPdfToImage = makeJobRunner<PdfToImageInput, PdfToImageOutput>(WORKERS.convert, "pdf-to-image");
-export const runImageToPdf = makeJobRunner<ImageToPdfInput, ImageToPdfOutput>(WORKERS.convert, "image-to-pdf");
-export const runTextToPdf = makeJobRunner<TextToPdfInput, TextToPdfOutput>(WORKERS.convert, "text-to-pdf");
-export const runRotate = makeJobRunner<RotateInput, RotateOutput>(WORKERS.pdfTool, "rotate");
-export const runSignPlace = makeJobRunner<SignPlaceInput, SignPlaceOutput>(WORKERS.pdfTool, "sign");
-export const runPdfInfo = makeJobRunner<{ file: ArrayBuffer }, PdfInfoOutput>(WORKERS.thumbs, "info");
-export const runThumbs = makeJobRunner<ThumbsInput, ThumbsOutput>(WORKERS.thumbs, "thumbs");
+export const runMerge = makeJobRunner<MergeInput, MergeOutput>(mkMerge, "merge");
+export const runSplit = makeJobRunner<SplitInput, SplitOutput>(mkSplit, "split");
+export const runCompress = makeJobRunner<CompressInput, CompressOutput>(mkCompress, "compress");
+export const runPdfToImage = makeJobRunner<PdfToImageInput, PdfToImageOutput>(mkConvert, "pdf-to-image");
+export const runImageToPdf = makeJobRunner<ImageToPdfInput, ImageToPdfOutput>(mkConvert, "image-to-pdf");
+export const runTextToPdf = makeJobRunner<TextToPdfInput, TextToPdfOutput>(mkConvert, "text-to-pdf");
+export const runRotate = makeJobRunner<RotateInput, RotateOutput>(mkPdfTool, "rotate");
+export const runSignPlace = makeJobRunner<SignPlaceInput, SignPlaceOutput>(mkPdfTool, "sign");
+export const runPdfInfo = makeJobRunner<{ file: ArrayBuffer }, PdfInfoOutput>(mkThumbs, "info");
+export const runThumbs = makeJobRunner<ThumbsInput, ThumbsOutput>(mkThumbs, "thumbs");
 
 /** Read a pageCount cheaply (with an in-memory memo on the client side). */
 export async function readPageCount(file: File): Promise<{ pageCount: number | null; encrypted: boolean }> {
