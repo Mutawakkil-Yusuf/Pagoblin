@@ -1,0 +1,49 @@
+"use client";
+
+/**
+ * Route -> tool mapping so the floating add button (and any drop) lands files
+ * in the right tool's store.
+ */
+import type { FileItem } from "@/lib/files";
+import type { FileKind } from "@/lib/files";
+import { useToolFiles } from "@/lib/store/docs";
+
+export type ToolKey = "home" | "merge" | "split" | "compress" | "convert" | "sign" | "flows" | "share";
+
+const ROUTE_TOOLS: { match: RegExp; tool: ToolKey; kinds: FileKind[] }[] = [
+  { match: /^\/merge-pdf/, tool: "merge", kinds: ["pdf"] },
+  { match: /^\/split-pdf/, tool: "split", kinds: ["pdf"] },
+  { match: /^\/compress/, tool: "compress", kinds: ["pdf"] },
+  { match: /^\/pdf-to-jpg/, tool: "convert", kinds: ["pdf"] },
+  { match: /^\/jpg-to-pdf/, tool: "convert", kinds: ["image"] },
+  { match: /^\/convert-pdf/, tool: "convert", kinds: ["pdf"] },
+  { match: /^\/sign/, tool: "sign", kinds: ["pdf"] },
+  { match: /^\/flows/, tool: "flows", kinds: ["pdf"] },
+  { match: /^\/app\/tools/, tool: "home", kinds: ["pdf"] },
+  { match: /^\/app/, tool: "home", kinds: ["pdf"] },
+];
+
+export function activeToolForPath(pathname: string): ToolKey {
+  const clean = (pathname || "").split("?")[0];
+  for (const r of ROUTE_TOOLS) if (r.match.test(clean)) return r.tool;
+  return "home";
+}
+
+export function ACTIVE_TOOL_KINDS(tool: ToolKey): FileKind[] {
+  switch (tool) {
+    case "merge":
+    case "split":
+    case "compress":
+    case "sign":
+    case "flows":
+      return ["pdf"];
+    case "convert":
+      return ["pdf", "image", "text"];
+    default:
+      return ["pdf"];
+  }
+}
+
+export function addFilesToTool(tool: ToolKey, items: FileItem[]) {
+  useToolFiles.getState().add(tool, items);
+}

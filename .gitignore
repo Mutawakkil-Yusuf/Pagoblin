@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.DS_Store
+playwright-report/
+test-results/
+.env*.local
+
+# generated or copied from node_modules by postinstall / npm run icons
+public/pdfjs/
+public/gs/
+public/icons/

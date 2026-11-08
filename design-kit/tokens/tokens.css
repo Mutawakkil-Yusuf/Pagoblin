@@ -1,0 +1,9 @@
+:root{
+  --ink:#17130F;--surface:#241D16;--line:#3A2F24;--dim:#5A4B3B;
+  --cream:#FFF1DC;--cream-shade:#EAD7BC;--muted:#C9BBA8;
+  --amber:#FF9F1C;--orange:#FF6B2C;--amber-deep:#D96A00;--peach:#FFC9A0;--sky:#B7CCFF;
+  --font-display:'Bricolage Grotesque',sans-serif;--font-body:'DM Sans',sans-serif;
+  --r-card:26px;--r-card-l:32px;--r-thumb:16px;--r-pill:999px;--page-x:20px;
+}
+body{background:var(--ink);color:var(--cream);font-family:var(--font-body)}
+h1,h2,h3{font-family:var(--font-display);font-weight:800;letter-spacing:-.03em}
