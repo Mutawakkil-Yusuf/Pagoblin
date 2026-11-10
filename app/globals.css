@@ -227,3 +227,19 @@ input[type="range"].pg-slider::-moz-range-thumb {
   box-sizing: border-box;
   cursor: pointer;
 }
+
+
+/* Landing page: slow float for the hero chips. Off for reduced motion. */
+@keyframes pg-float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+}
+.pg-float {
+  animation: pg-float 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pg-float {
+    animation: none;
+    transform: rotate(var(--r, 0deg));
+  }
+}

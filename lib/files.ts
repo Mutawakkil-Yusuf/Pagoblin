@@ -171,8 +171,10 @@ export function pickFiles(opts: { accept?: string; multiple: boolean }): Promise
       resolve(files);
     };
     input.addEventListener("change", finish);
-    // Fallback if change never fires (some Android WebViews on cancel).
-    window.addEventListener("focus", finish, { once: true });
+    input.addEventListener("cancel", finish);
+    // Fallback if neither event fires (some Android WebViews). The window regains focus
+    // BEFORE the change event on many browsers, so wait before reading the files.
+    window.addEventListener("focus", () => setTimeout(finish, 1500), { once: true });
     setTimeout(finish, 60_000);
     input.click();
   });

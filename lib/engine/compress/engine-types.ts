@@ -19,5 +19,7 @@ export type CompressEngine = {
     fileName: string,
     dpi: number,
     signalCheck?: () => void,
+    /** Optional live page progress inside one attempt (Ghostscript reports it). */
+    onPage?: (page: number, total: number) => void,
   ): Promise<AttemptResult>;
 };

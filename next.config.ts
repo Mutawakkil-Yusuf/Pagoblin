@@ -32,11 +32,20 @@ const csp = [
   isDev ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'${analytics}` : "",
 ].join("; ");
 
+// Every route is prerendered. Precache their HTML so a first visit that goes offline still opens them.
+const ROUTES = ["/", "/app", "/app/tools", "/merge-pdf", "/split-pdf", "/compress-pdf", "/convert-pdf", "/sign-pdf", "/flows", "/done", "/settings", "/about", "/privacy", "/terms", "/pro"];
+const BUILD_REV = String(Date.now());
+
 const withSerwistInstance = withSerwist({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
   cacheOnNavigation: true,
   register: true,
+  // Default is true: it would reload the page when the connection returns and wipe files the person is working on.
+  reloadOnOnline: false,
+  // Heavy engines (/gs, /pdfjs) are NOT precached; they are cached on first use or via the offline button.
+  additionalPrecacheEntries: ROUTES.map((url) => ({ url, revision: BUILD_REV })),
+  globPublicPatterns: ["*.svg", "fonts/**/*", "icons/**/*", "screenshots/**/*", "gs-worker.js"],
   // Serwist needs devDisable; in dev we skip the SW entirely so hot reload stays simple.
   disable: isDev,
 });
@@ -59,6 +68,15 @@ const nextConfig: NextConfig = {
     return config;
   },
   headers: async () => [
+    {
+      // The service worker must always be re-checked so updates reach people.
+      source: "/sw.js",
+      headers: [
+        { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        { key: "Service-Worker-Allowed", value: "/" },
+        { key: "Content-Security-Policy", value: csp },
+      ],
+    },
     {
       source: "/(.*)",
       headers: [

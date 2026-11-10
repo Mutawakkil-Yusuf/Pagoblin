@@ -1,5 +1,8 @@
 "use client";
 
+import { REPO_URL } from "@/lib/links";
+import { IconGitHub } from "@/components/ui/Social";
+import { InstallButton } from "@/components/pwa/InstallButton";
 /** Floating pill nav (phone) + round add button, action sheet, desktop top nav.
  * The active pill slides between items with a shared layoutId. */
 import Link from "next/link";
@@ -40,12 +43,10 @@ function activeFor(pathname: string): string {
 
 function PhoneNav({ pathname }: { pathname: string }) {
   const active = activeFor(pathname);
-  const soundOn = useSettings((s) => s.soundOn);
-  const setSoundOn = useSettings((s) => s.setSoundOn);
   return (
     <nav
       aria-label="App sections"
-      className="md:hidden fixed bottom-[10px] left-[10px] z-40 flex items-center gap-0.5 rounded-[36px] border border-line bg-surface px-1.5 py-1.5 shadow-pop"
+      className="md:hidden fixed bottom-[max(10px,env(safe-area-inset-bottom))] left-[10px] z-40 flex gap-0.5 rounded-[36px] border border-line bg-surface px-1.5 py-1.5 shadow-pop"
     >
       <LayoutGroup id="phone-nav">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
@@ -76,35 +77,6 @@ function PhoneNav({ pathname }: { pathname: string }) {
           );
         })}
       </LayoutGroup>
-      {/* divider + sound + settings, always reachable on phone */}
-      <span aria-hidden="true" className="mx-1 h-[26px] w-px bg-line" />
-      <button
-        type="button"
-        aria-label={soundOn ? "Turn sound off" : "Turn sound on"}
-        aria-pressed={soundOn}
-        className="flex h-[50px] w-[44px] items-center justify-center rounded-[25px] text-muted"
-        onClick={() => {
-          setSoundOn(!soundOn);
-          sound.play(soundOn ? "toggle-off" : "toggle-on");
-          haptic("tap");
-        }}
-      >
-        {soundOn ? <IconSoundOn /> : <IconSoundOff />}
-      </button>
-      <Link
-        href="/settings"
-        aria-label="Settings"
-        aria-current={pathname.startsWith("/settings") ? "page" : undefined}
-        className={`flex h-[50px] w-[44px] items-center justify-center rounded-[25px] ${
-          pathname.startsWith("/settings") ? "bg-amber text-ink" : "text-muted"
-        }`}
-        onClick={() => {
-          sound.play("pop");
-          haptic("tap");
-        }}
-      >
-        <IconGear />
-      </Link>
     </nav>
   );
 }
@@ -123,7 +95,7 @@ function AddButton() {
           haptic("tap");
           setOpen((v) => !v);
         }}
-        className="fixed bottom-[10px] right-[10px] z-50 flex h-[68px] w-[68px] items-center justify-center rounded-[34px] bg-orange text-ink shadow-pop md:hidden"
+        className="fixed bottom-[max(10px,env(safe-area-inset-bottom))] right-[10px] z-50 flex h-[68px] w-[68px] items-center justify-center rounded-[34px] bg-orange text-ink shadow-pop md:hidden"
         animate={{ rotate: open ? 90 : 0 }}
         transition={{ type: "spring", ...springs.snappy }}
         whileTap={{ scale: 0.96 }}
@@ -167,7 +139,7 @@ export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void
           <motion.div
             role="dialog"
             aria-label="Add files"
-            className="fixed bottom-[86px] right-[10px] left-[10px] z-50 md:hidden"
+            className="fixed bottom-[calc(max(10px,env(safe-area-inset-bottom))+76px)] right-[10px] left-[10px] z-50 md:hidden"
             initial={{ y: 24, opacity: 0, scale: 0.98 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 18, opacity: 0, scale: 0.98 }}
@@ -214,6 +186,39 @@ export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void
   );
 }
 
+/** Sound toggle + settings, shown in the phone top bar (and reusable anywhere). */
+export function HeaderActions({ className = "" }: { className?: string }) {
+  const pathname = usePathname();
+  const soundOn = useSettings((s) => s.soundOn);
+  const setSoundOn = useSettings((s) => s.setSoundOn);
+  const btn = "flex h-[44px] w-[44px] items-center justify-center rounded-pill border-2 border-line bg-surface";
+  return (
+    <div className={`flex items-center gap-1.5 ${className}`}>
+      <button
+        type="button"
+        aria-label={soundOn ? "Turn sound off" : "Turn sound on"}
+        aria-pressed={soundOn}
+        className={`${btn} text-cream`}
+        onClick={() => {
+          setSoundOn(!soundOn);
+          sound.play(soundOn ? "toggle-off" : "toggle-on");
+          haptic("tap");
+        }}
+      >
+        {soundOn ? <IconSoundOn /> : <IconSoundOff />}
+      </button>
+      <Link
+        href="/settings"
+        aria-label="Settings"
+        className={`${btn} ${pathname === "/settings" ? "text-amber" : "text-cream"}`}
+        onClick={() => haptic("tap")}
+      >
+        <IconGear />
+      </Link>
+    </div>
+  );
+}
+
 /** Desktop top nav (768px up): brand, sections, sound toggle, settings. */
 export function DesktopNav({ simple }: { simple?: boolean }) {
   const pathname = usePathname();
@@ -221,8 +226,8 @@ export function DesktopNav({ simple }: { simple?: boolean }) {
   const setSoundOn = useSettings((s) => s.setSoundOn);
   const linkCls = "rounded-pill px-3 py-2 text-body font-medium text-cream hover:bg-surface";
   return (
-    <header className="sticky top-0 z-40 hidden border-b border-line bg-ink/92 backdrop-blur md:block">
-      <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
+    <header className="sticky top-0 z-40 hidden border-b border-line bg-ink/90 backdrop-blur md:block">
+      <div className="mx-auto flex max-w-[1120px] items-center justify-between px-8 py-3">
         <Link href="/" className="flex items-center gap-2.5" aria-label="Pagoblin home">
           <MiniMark />
           <span className="font-display text-[26px] font-extrabold tracking-[-0.5px] text-cream">Pagoblin</span>
@@ -270,15 +275,19 @@ export function DesktopNav({ simple }: { simple?: boolean }) {
           >
             <IconGear />
           </Link>
-          <Link
-            href="/app"
-            className="ml-2 inline-flex h-[52px] items-center rounded-pill bg-amber px-7 font-bold text-[16px] text-ink"
-            onClick={() => {
-              sound.play("pop");
-            }}
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Pagoblin source code on GitHub"
+            className="flex h-[44px] w-[44px] items-center justify-center rounded-pill text-cream hover:bg-surface"
           >
-            Open Pagoblin
-          </Link>
+            <IconGitHub />
+          </a>
+          <InstallButton
+            className="ml-2 inline-flex h-[44px] items-center rounded-pill bg-amber px-5 text-[15px] font-bold text-ink"
+            label="Install"
+          />
         </nav>
       </div>
     </header>

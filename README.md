@@ -59,3 +59,15 @@ On ARM/small-memory machines run builds with
 
 See `DECISIONS.md` for every inference and workaround (Android-kernel nft
 patch, TS version pin, self-hosted fonts, worker literal-URL bundling).
+
+
+## PWA and offline
+
+- Installable: manifest at `/manifest.webmanifest`, icons in `public/icons/` (committed; regenerate with `npm run icons` after changing `design-kit/assets/app-icon.svg`), install screenshots in `public/screenshots/`.
+- The service worker (`app/sw.ts`, built to `public/sw.js`) precaches the app shell and every route. The heavy engines (`/gs`, `/pdfjs`, about 18 MB) are cached the first time a tool uses them, or on demand with Settings, Work offline.
+- Client navigations (for example to `/done`) are cached too, so a finished result is never lost offline.
+- Test offline for real: `npm run build && npm start`, open the app, then stop the server and reload.
+
+## Links
+
+Repo, Instagram and X live in `lib/links.ts`.

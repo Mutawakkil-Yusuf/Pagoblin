@@ -9,9 +9,14 @@ import { useToolFiles } from "@/lib/store/docs";
 import { useDoneStore } from "@/lib/store/done";
 import { haptic } from "@/lib/haptics";
 import { VERSION } from "@/lib/version";
+import { Credit, SourceLink, IconGitHub } from "@/components/ui/Social";
+import { InstallButton } from "@/components/pwa/InstallButton";
+import { OfflineRow } from "@/components/pwa/OfflineRow";
+import { usePwa } from "@/lib/pwa";
 
 export default function SettingsPage() {
   const s = useSettings();
+  const { installed, deferred } = usePwa();
   const clearToolFiles = useToolFiles((st) => st.clear);
   const clearDone = useDoneStore((st) => st.clear);
 
@@ -34,10 +39,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <AppPage title="Settings" back="/app" chrome width={480}>
+    <AppPage title="Settings" back="/app" chrome width={720}>
       <div className="mt-6 flex flex-col items-center gap-2 text-center">
         <Pip mood="happy" size={96} />
-        <h1 className="font-display text-h2 text-cream">Settings</h1>
+        <h2 className="sr-only">Settings</h2>
         <p className="text-small text-muted">Your choices live on this device only.</p>
       </div>
 
@@ -63,6 +68,27 @@ export default function SettingsPage() {
         </Row>
       </div>
 
+      <div className="mt-4 rounded-card-l border border-line bg-surface p-5">
+        <Row
+          label="Install Pagoblin"
+          hint={
+            installed
+              ? "Installed. Open it from your home screen or apps."
+              : deferred
+                ? "Add it to your device. It opens like an app."
+                : "Use your browser menu and choose Install app or Add to Home Screen."
+          }
+        >
+          {installed ? (
+            <span className="rounded-pill bg-ink px-3 py-1.5 text-small font-bold text-amber">Installed</span>
+          ) : (
+            <InstallButton className="min-h-[44px] rounded-pill bg-orange px-5 font-bold text-ink" label="Install" />
+          )}
+        </Row>
+        <div className="my-3 h-px bg-line" />
+        <OfflineRow />
+      </div>
+
       <button
         type="button"
         className="mt-4 min-h-[52px] w-full rounded-card-l border-2 border-line bg-surface px-5 text-left font-bold text-cream"
@@ -71,7 +97,7 @@ export default function SettingsPage() {
         Clear saved preferences and files
       </button>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Link href="/privacy" className="rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream">
           Privacy
         </Link>
@@ -81,13 +107,11 @@ export default function SettingsPage() {
         <Link href="/about" className="rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream">
           About
         </Link>
-        <a
-          href="https://github.com/pagoblin/pagoblin"
-          className="rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream"
-        >
-          Source
-        </a>
+        <SourceLink className="inline-flex items-center gap-2 rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream">
+          <IconGitHub size={18} /> Source
+        </SourceLink>
       </div>
+      <Credit className="mt-8 rounded-card-l border border-line bg-surface p-5" />
       <p className="mt-6 text-center text-small text-muted">Version {VERSION}</p>
     </AppPage>
   );

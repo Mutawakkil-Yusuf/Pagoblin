@@ -45,6 +45,18 @@ export function DropZone(props: {
     },
     [accept, gulp, onFiles],
   );
+
+  const openPicker = useCallback(async () => {
+    if (disabled) return;
+    const parts: string[] = [];
+    if (accept.includes("pdf")) parts.push("application/pdf", ".pdf");
+    if (accept.includes("image")) parts.push("image/*");
+    if (accept.includes("text")) parts.push("text/plain", ".txt");
+    // pickFiles clicks the input synchronously, inside the tap that called us (iOS needs that).
+    const files = await pickFiles({ accept: parts.join(","), multiple: true });
+    await handleFiles(files);
+  }, [accept, disabled, handleFiles]);
+
   // Paste support on the whole window while this zone is mounted.
   useEffect(() => {
     if (disabled) return;
@@ -66,9 +78,14 @@ export function DropZone(props: {
     <section
       aria-label={label ?? "Add files"}
       data-testid="dropzone"
-      className={`dropzone group relative overflow-hidden rounded-card-l border-2 transition-colors ${
+      className={`dropzone group relative cursor-pointer overflow-hidden rounded-card-l border-2 transition-colors ${
         hot ? "dropzone-hot border-amber bg-surface" : "border-dashed border-line bg-transparent"
-      } ${variant === "hero" ? "px-6 py-10" : "px-4 py-6"} ${className ?? ""}`}
+      } ${variant === "hero" ? "flex flex-col justify-center px-6 py-10" : "px-4 py-6 md:py-14"} ${className ?? ""}`}
+      onClick={(e) => {
+        const t = e.target as HTMLElement;
+        if (t.closest("button,a,input,textarea")) return;
+        void openPicker();
+      }}
       onDragEnter={(e) => {
         if (disabled) return;
         e.preventDefault();
@@ -143,30 +160,18 @@ export function DropZone(props: {
         ) : (
           <div>{children}</div>
         )}
-        <VisuallyHiddenPicker accept={accept} onFiles={handleFiles} />
+        <VisuallyHiddenPicker onOpen={openPicker} />
       </div>
     </section>
   );
 }
 
-function VisuallyHiddenPicker(props: {
-  accept: FileKind[];
-  onFiles: (items: File[]) => void | Promise<void>;
-}) {
-  // The picker must open inside the same user activation: no dynamic import
-  // inside the click handler. pickFiles is statically imported at the top.
+function VisuallyHiddenPicker(props: { onOpen: () => void | Promise<void> }) {
   return (
     <button
       type="button"
       className="min-h-[44px] rounded-pill px-4 text-small font-bold text-amber underline-offset-4 hover:underline"
-      onClick={() => {
-        const acceptStr = props.accept.includes("image")
-          ? "application/pdf,image/*"
-          : props.accept.includes("text")
-            ? "application/pdf,image/*,text/plain"
-            : ".pdf,application/pdf";
-        void pickFiles({ accept: acceptStr, multiple: true }).then(async (files) => props.onFiles(files));
-      }}
+      onClick={() => void props.onOpen()}
     >
       Browse files
     </button>

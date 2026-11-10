@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Pip } from "@/components/pip/Pip";
+import { Credit, IconGitHub, SourceLink } from "@/components/ui/Social";
 
 export const metadata: Metadata = {
   title: "About — why Pagoblin exists",
@@ -25,11 +26,18 @@ export default function AboutPage() {
       <p className="mt-4 text-body">
         Pip is the goblin who does the chewing. He is a mascot, not a cloud service.
       </p>
-      <div className="mt-8">
+      <p className="mt-4 text-body">
+        The source is public, so you can read every line and check the privacy claim yourself.
+      </p>
+      <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/app" className="inline-flex min-h-[52px] items-center rounded-pill bg-orange px-7 font-bold text-ink">
           Open the toolkit
         </Link>
+        <SourceLink className="inline-flex min-h-[52px] items-center gap-2 rounded-pill border-2 border-line bg-surface px-7 font-bold text-cream hover:border-amber">
+          <IconGitHub size={20} /> View source on GitHub
+        </SourceLink>
       </div>
+      <Credit className="mt-12 border-t border-line pt-8" />
     </main>
   );
 }

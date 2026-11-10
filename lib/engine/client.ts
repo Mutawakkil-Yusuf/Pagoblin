@@ -79,6 +79,7 @@ function makeJobRunner<I, O>(makeWorker: () => Worker, kind: string): JobRunner<
     } catch (err) {
       const raw = err instanceof Error ? err : undefined;
       const msg = raw ? raw.message : String(err);
+      console.error("[pagoblin job failed]", kind, err);
       if (raw?.name === "CancelledError" || msg.includes("canceled by job")) throw new CancelledError();
       // Comlink stacks arrive as string "Error: <msg>" sometimes.
       if (/password|encrypt/i.test(msg)) throw new EngineError("password", undefined, raw);

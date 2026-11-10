@@ -129,7 +129,7 @@ export default function FlowsPage() {
   };
 
   return (
-    <AppPage width={480}>
+    <AppPage width={720}>
       <div className="mt-10 flex items-start justify-between md:mt-6">
         <div>
           <h1 className="font-display text-h2 text-cream">Flows</h1>

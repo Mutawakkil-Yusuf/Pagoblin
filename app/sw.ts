@@ -18,6 +18,7 @@ import type { PrecacheEntry } from "serwist";
 import {
   Serwist,
   CacheFirst,
+  NetworkFirst,
   CacheableResponsePlugin,
   type RuntimeCaching,
 } from "serwist";
@@ -28,9 +29,24 @@ const engineAssets: RuntimeCaching = {
   matcher: ({ url, request }) =>
     request.method === "GET" &&
     url.origin === self.location.origin &&
-    (url.pathname.startsWith("/pdfjs/") || url.pathname.startsWith("/gs/")),
+    (url.pathname.startsWith("/pdfjs/") || url.pathname.startsWith("/gs/") || url.pathname === "/gs-worker.js"),
   handler: new CacheFirst({
     cacheName: "engine-assets",
+    plugins: [new CacheableResponsePlugin({ statuses: [200] })],
+  }),
+};
+
+/**
+ * Client-side navigations (router.push("/done")) fetch an RSC payload, not HTML. Finished results live
+ * in memory, so those navigations must also work offline or the result would be lost on a reload.
+ * NetworkFirst, falling back to any cached payload for the same route (ignoring the _rsc hash).
+ */
+const rscOffline: RuntimeCaching = {
+  matcher: ({ request, sameOrigin }) => sameOrigin && request.method === "GET" && request.headers.get("RSC") === "1",
+  handler: new NetworkFirst({
+    cacheName: "rsc-offline",
+    networkTimeoutSeconds: 4,
+    matchOptions: { ignoreSearch: true, ignoreVary: true },
     plugins: [new CacheableResponsePlugin({ statuses: [200] })],
   }),
 };
@@ -40,7 +56,7 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: [engineAssets, ...defaultCache],
+  runtimeCaching: [engineAssets, rscOffline, ...defaultCache],
   disableDevLogs: true,
 });
 

@@ -26,6 +26,7 @@ module.exports = {
       borderRadius: {
         ...kit.theme.extend.borderRadius,
         "phone-chip": "22px",
+        pill: "9999px", // tokens.json radius.pill; was missing from the kit config
       },
       fontSize: {
         "display-xl": [`${tokens.size["display-xl"]}px`, { lineHeight: "0.95", letterSpacing: "-0.03em" }],
@@ -68,6 +69,7 @@ module.exports = {
       },
       zIndex: {
         100: "100",
+        101: "101",
         60: "60",
       },
       skins: {},

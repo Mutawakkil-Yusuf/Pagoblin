@@ -1,34 +1,24 @@
 /**
  * Engine A: Ghostscript compiled to WebAssembly.
- * Each trial runs a fresh Ghostscript instance via callMain over MEMFS (the
- * runtime contract of @jspawn/ghostscript-wasm). The job client terminates the
- * worker after each job, releasing all WASM memory; per-trial instances are
- * dropped for garbage collection.
+ * Each trial runs in its own classic worker (public/gs-worker.js) over MEMFS and is
+ * terminated afterwards, which releases all WASM memory.
  *
  * Ghostscript is AGPL-3.0. Source: https://github.com/jsscheller/ghostscript-wasm
  * (up to https://ghostscript.com). Linked from /about and the footer.
  *
  * @license AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  */
-import GS from "@jspawn/ghostscript-wasm";
 import type { CompressEngine } from "./engine-types";
 
-type GsModule = Awaited<ReturnType<typeof GS>>;
+/** Classic worker in /public (committed). It loads /gs/gs.js and /gs/gs.wasm, which
+ * `npm run postinstall` copies out of node_modules. */
+export const GS_WORKER_URL = "/gs-worker.js";
 
-export const GS_WASM_URL = "/gs/gs.wasm";
-
-async function instance(): Promise<GsModule> {
-  return GS({
-    locateFile: (file: string) => (file.endsWith(".wasm") ? GS_WASM_URL : `/gs/${file}`),
-  });
-}
-
-function gsArgs(fileName: string, outName: string, dpi: number): string[] {
+function gsArgs(inPath: string, outPath: string, dpi: number): string[] {
   return [
     "-dSAFER",
     "-dBATCH",
     "-dNOPAUSE",
-    "-dQUIET",
     "-sDEVICE=pdfwrite",
     "-dCompatibilityLevel=1.5",
     "-dDownsampleColorImages=true",
@@ -42,37 +32,42 @@ function gsArgs(fileName: string, outName: string, dpi: number): string[] {
     "-dSubsetFonts=true",
     "-dDetectDuplicateImages=true",
     "-dCompressStreams=true",
-    `-sOutputFile=${outName}`,
-    fileName,
+    `-sOutputFile=${outPath}`,
+    inPath,
   ];
 }
 
-/** Run one Ghostscript pass at a given dpi. Returns the output bytes. */
+type GsReply = { ok: boolean; bytes?: Uint8Array; error?: string; progress?: boolean; page?: number; total?: number };
+
+/** Run one Ghostscript pass at a given dpi in a fresh worker. */
 export async function runGsOnce(
   input: ArrayBuffer,
   fileName: string,
   dpi: number,
   signalCheck?: () => void,
+  onPage?: (page: number, total: number) => void,
 ): Promise<Uint8Array | null> {
-  const mod = await instance();
+  void fileName; // fixed in-memory names avoid trouble with spaces and unicode
+  signalCheck?.();
+  const worker = new Worker(GS_WORKER_URL);
   try {
-    signalCheck?.(); // between bootstrap and render
-    const fs = mod.FS;
-    fs.mkdir("/work");
-    const inPath = `/work/${fileName}`;
-    fs.writeFile(inPath, new Uint8Array(input));
-    const outPath = "/work/out.pdf";
-    mod.callMain(gsArgs(inPath, outPath, dpi));
+    const reply = await new Promise<GsReply>((resolve, reject) => {
+      worker.onmessage = (e: MessageEvent<GsReply>) => {
+        if (e.data.progress) {
+          onPage?.(e.data.page ?? 0, e.data.total ?? 0);
+          return;
+        }
+        resolve(e.data);
+      };
+      worker.onerror = (e) => reject(new Error(e.message || "Ghostscript worker failed to start"));
+      const copy = input.slice(0);
+      worker.postMessage({ input: copy, args: gsArgs("/work/in.pdf", "/work/out.pdf", dpi) }, [copy]);
+    });
     signalCheck?.();
-    try {
-      const out = fs.readFile(outPath);
-      // Copy out of MEMFS before the module is dropped.
-      return new Uint8Array(out);
-    } catch {
-      return null;
-    }
+    if (!reply.ok || !reply.bytes) throw new Error(reply.error || "Ghostscript trial failed");
+    return reply.bytes;
   } finally {
-    void mod; // instance dropped; worker termination releases the real memory
+    worker.terminate();
   }
 }
 
@@ -83,8 +78,8 @@ export const gsCompressEngine: CompressEngine = {
     // The wasm exists as a static asset; real availability is proven on first trial.
     return true;
   },
-  async attempt(inputBytes, fileName, dpi, signalCheck) {
-    const bytes = await runGsOnce(inputBytes, fileName, dpi, signalCheck);
+  async attempt(inputBytes, fileName, dpi, signalCheck, onPage) {
+    const bytes = await runGsOnce(inputBytes, fileName, dpi, signalCheck, onPage);
     if (!bytes) return { size: -1, bytes: null };
     return { size: bytes.byteLength, bytes };
   },

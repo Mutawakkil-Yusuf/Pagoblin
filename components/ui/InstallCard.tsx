@@ -10,54 +10,31 @@ import { AnimatePresence, motion } from "motion/react";
 import { useSettings } from "@/lib/store/settings";
 import { sound } from "@/lib/sound";
 import { Pip } from "@/components/pip/Pip";
-
-type BIPEvent = Event & { prompt: () => Promise<void>; userChoice?: Promise<{ outcome: string }> };
+import { isIos, promptInstall, usePwa } from "@/lib/pwa";
 
 export function InstallCard() {
   const installCardShown = useSettings((s) => s.installCardShown);
   const markShown = useSettings((s) => s.markInstallCardShown);
-  const [deferred, setDeferred] = useState<BIPEvent | null>(null);
+  const { deferred, installed } = usePwa();
   const [visible, setVisible] = useState(false);
+  const [ios, setIos] = useState(false);
 
   useEffect(() => {
-    if (installCardShown) return;
-    const onBIP = (e: Event) => {
-      e.preventDefault();
-      setDeferred(e as BIPEvent);
+    setIos(isIos());
+  }, []);
+
+  // Show once, only when installing is actually possible (a real prompt, or iOS steps).
+  useEffect(() => {
+    if (visible || installCardShown || installed) return;
+    if (deferred || ios) {
       setVisible(true);
       markShown();
-    };
-    window.addEventListener("beforeinstallprompt", onBIP, { once: true });
-    // Standalone hint fallback: if installable APIs are absent, still show once on phones.
-    const standalone = window.matchMedia("(display-mode: standalone)").matches;
-    const ios = /iphone|ipad/i.test(navigator.userAgent) && !standalone;
-    const timer = setTimeout(() => {
-      if (ios) {
-        setVisible(true);
-        markShown();
-      } else if (!("onbeforeinstallprompt" in window) && !standalone) {
-        setVisible(true);
-        markShown();
-      }
-    }, 1200);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", onBIP);
-      clearTimeout(timer);
-    };
-  }, [installCardShown, markShown]);
+    }
+  }, [visible, installCardShown, installed, deferred, ios, markShown]);
 
   const install = async () => {
     sound.play("pop");
-    if (deferred) {
-      try {
-        await deferred.prompt();
-      } catch {
-        /* ignore */
-      }
-      setDeferred(null);
-      setVisible(false);
-      return;
-    }
+    await promptInstall();
     setVisible(false);
   };
 
@@ -85,13 +62,15 @@ export function InstallCard() {
             </div>
           </div>
           <div className="mt-4 flex gap-3">
-            <button
-              type="button"
-              className="h-[44px] flex-1 rounded-pill bg-orange font-bold text-ink"
-              onClick={() => void install()}
-            >
-              Install app
-            </button>
+            {deferred ? (
+              <button
+                type="button"
+                className="h-[44px] flex-1 rounded-pill bg-orange font-bold text-ink"
+                onClick={() => void install()}
+              >
+                Install app
+              </button>
+            ) : null}
             <button
               type="button"
               aria-label="Dismiss install card"
@@ -101,13 +80,11 @@ export function InstallCard() {
                 setVisible(false);
               }}
             >
-              Not now
+              {deferred ? "Not now" : "Got it"}
             </button>
           </div>
           {!deferred && (
-            <p className="mt-3 text-micro text-muted">
-              Tip: in Safari, tap Share then “Add to Home Screen”. In Chrome, look for Install in the menu.
-            </p>
+            <p className="mt-3 text-small text-muted">In Safari, tap Share, then Add to Home Screen.</p>
           )}
         </motion.div>
       )}

@@ -29,6 +29,15 @@ const INKS: { key: string; label: string; value: string }[] = [
   { key: "blue", label: "Blue", value: "#1D2FA6" },
 ];
 
+/** Decode a data: URL without fetch(); the CSP (connect-src 'self') blocks fetch on data URLs. */
+function dataUrlToArrayBuffer(url: string): ArrayBuffer {
+  const b64 = url.slice(url.indexOf(",") + 1);
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out.buffer;
+}
+
 export function SignTool() {
   const files = useToolFiles((s) => s.files.sign);
   const add = useToolFiles((s) => s.add);
@@ -250,7 +259,7 @@ export function SignTool() {
     haptic("tap");
     try {
       const buffer = await item.file.arrayBuffer();
-      const bytes = await (await fetch(sigUrl)).blob().then((b) => b.arrayBuffer());
+      const bytes = dataUrlToArrayBuffer(sigUrl);
       const pages = scopePages();
       const out = await runSignPlace(
         {

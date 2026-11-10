@@ -5,12 +5,14 @@ export type CompressTrialResult = { dpi: number; size: number };
 export type CompressAttemptFn = (dpi: number) => Promise<{ size: number }>;
 
 /**
- * Binary search the render density that fits the target.
- * lo is guaranteed feasible in the abstract search only when it compresses
- * enough; we re-derive from real measurements:
- *  - If lo trial already fits, we raise lo until just below the threshold of
- *    failing, so quality stays as high as the target allows.
- * Records every real attempt so the UI can show honest numbers.
+ * Find the highest render density whose REAL measured size fits the target, in as few passes
+ * as possible. Every pass is a full run over the file (slow on big PDFs and phones), so instead
+ * of plain bisection we model size as roughly linear in dpi squared and interpolate.
+ *  1. Measure the floor (minDpi). If even that is too big, nothing fits: report honestly.
+ *  2. Probe a middle density, then jump towards the target by interpolating between the
+ *     closest fitting and the closest too-big measurement.
+ *  3. Stop when a fitting result is within 15% of the target, the bracket is narrow, or the
+ *     pass budget (maxAttempts) is used. The best real fitting measurement wins.
  * Never fabricates a size: all numbers come from real engine runs.
  */
 export async function targetSizeSearch(opts: {
@@ -21,8 +23,10 @@ export async function targetSizeSearch(opts: {
   attempt: CompressAttemptFn;
   shouldStop?: () => boolean;
   onAttempt?: (t: CompressTrialResult, i: number, total: number) => void;
+  maxAttempts?: number;
 }): Promise<{ best: { dpi: number; size: number } | null; attempts: CompressTrialResult[] }> {
   const { target, minDpi, maxDpi, attempt, shouldStop, onAttempt } = opts;
+  const maxAttempts = opts.maxAttempts ?? 5;
   const attempts: CompressTrialResult[] = [];
   let best: CompressTrialResult | null = null;
 
@@ -32,33 +36,41 @@ export async function targetSizeSearch(opts: {
     onAttempt?.({ dpi, size }, attempts.length, 0);
   };
 
-  // Seed the bounds with real measurements.
-  let lo = minDpi;
-  let hi = maxDpi;
-  const loSize = (await attempt(lo)).size;
+  const loSize = (await attempt(minDpi)).size;
+  record(minDpi, loSize);
   if (shouldStop?.()) return { best, attempts };
-  record(lo, loSize);
+  // Even the lowest density overflows: no fitting result exists.
+  if (loSize > target) return { best: null, attempts };
 
-  // Even lowest dpi is too big: report honestly.
-  if (loSize <= target) {
-    // Try to climb quality while staying under target.
-    hi = maxDpi;
-  } else {
-    // Minimum density still overflows: no fitting result exists.
-    return { best: null, attempts };
-  }
+  let lo: CompressTrialResult = { dpi: minDpi, size: loSize }; // closest fitting
+  let hi: CompressTrialResult | null = null; // closest too big
+  let probe = Math.min(maxDpi, 96);
 
-  while (hi - lo > Math.max(6, lo * 0.08)) {
-    if (shouldStop?.()) return { best, attempts };
-    const mid = Math.round((lo + hi) / 2);
-    const size = (await attempt(mid)).size;
-    record(mid, size);
-    if (shouldStop?.()) return { best, attempts };
+  while (attempts.length < maxAttempts && probe > lo.dpi) {
+    if (shouldStop?.()) break;
+    const size = (await attempt(probe)).size;
+    record(probe, size);
+    if (shouldStop?.()) break;
     if (size <= target) {
-      lo = mid; // feasible: keep it, push quality up
+      lo = { dpi: probe, size };
+      if (size >= target * 0.85 || probe >= maxDpi) break; // close enough, or at the ceiling
     } else {
-      hi = mid; // too big: reduce quality (dpi down)
+      hi = { dpi: probe, size };
     }
+
+    let next: number;
+    if (hi) {
+      if (hi.dpi - lo.dpi <= Math.max(12, lo.dpi * 0.2)) break; // bracket is narrow enough
+      const f = (target - lo.size) / (hi.size - lo.size);
+      next = Math.sqrt(lo.dpi ** 2 + f * (hi.dpi ** 2 - lo.dpi ** 2));
+      next = Math.min(Math.max(next, lo.dpi + 6), hi.dpi - 6);
+    } else {
+      // Everything so far fits: extrapolate from the floor through the latest fitting point.
+      const slope = (lo.size - loSize) / (lo.dpi ** 2 - minDpi ** 2);
+      next = slope > 0 ? Math.sqrt(lo.dpi ** 2 + (target - lo.size) / slope) : maxDpi;
+      next = Math.min(maxDpi, Math.max(next, lo.dpi + 12));
+    }
+    probe = Math.round(next);
   }
   return { best, attempts };
 }

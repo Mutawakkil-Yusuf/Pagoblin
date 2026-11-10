@@ -23,23 +23,31 @@ export function ToolLanding(props: {
 }) {
   const { title, intro, faq, children, about } = props;
   return (
-    <AppPage width={480}>
-      <div className="hidden md:mt-10 md:block">
-        <Pip mood="idle" size={56} className="float-right" />
-      </div>
-      <h1 className="sr-only">{title}</h1>
-      <p className="mt-8 text-body leading-[22px] text-muted md:hidden">{intro}</p>
-      <div className="mt-7 md:mt-2">{children}</div>
+    <AppPage width="tool">
+      {/* Phone: stacked. Laptop (1024+): the tool on the left, explainer and FAQ on the right. */}
+      <div className="mt-8 lg:mt-12 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-14">
+        <div className="min-w-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="font-display text-h2 font-extrabold tracking-[-1px] text-cream md:text-[40px] md:leading-[44px]">
+                {title}
+              </h1>
+              <p className="mt-2 max-w-[560px] text-body leading-6 text-muted">{intro}</p>
+            </div>
+            <Pip mood="idle" size={56} className="hidden flex-none md:block" />
+          </div>
+          <div className="mt-7">{children}</div>
+        </div>
 
-      <section aria-labelledby="ex-about" className="mt-16 border-t border-line pt-8">
-        <h2 id="ex-about" className="font-display text-h3 text-cream">
-          About this tool
-        </h2>
-        <p className="mt-3 text-body leading-6 text-muted">{intro}</p>
-        {about ? <p className="mt-3 text-body leading-6 text-muted">{about}</p> : null}
-        <FaqList items={faq} />
-        <OwnerNote />
-      </section>
+        <aside aria-labelledby="ex-about" className="mt-14 border-t border-line pt-8 lg:mt-0 lg:border-t-0 lg:pt-0">
+          <h2 id="ex-about" className="font-display text-h3 text-cream">
+            About this tool
+          </h2>
+          {about ? <p className="mt-3 text-body leading-6 text-muted">{about}</p> : null}
+          <FaqList items={faq} />
+          <OwnerNote />
+        </aside>
+      </div>
     </AppPage>
   );
 }

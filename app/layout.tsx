@@ -3,7 +3,7 @@ import "./globals.css";
 import { ToastHost } from "@/components/ui/ToastHost";
 import { MotionPreference } from "@/components/MotionPreference";
 import { SoundBoot } from "@/components/SoundBoot";
-import { DiagHook } from "@/components/diag/DiagHook";
+import { PwaBoot } from "@/components/pwa/PwaBoot";
 
 // Brand fonts are self-hosted via @font-face in globals.css — no runtime
 // Google Fonts request (CSP stays `connect-src 'self'`), and builds work
@@ -41,10 +41,19 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* beforeinstallprompt fires once and early: keep it for the install buttons (lib/pwa.ts). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__bip=e;});",
+          }}
+        />
+      </head>
       <body>
         <MotionPreference>
           <SoundBoot />
-          <DiagHook />
+          <PwaBoot />
           {children}
           <ToastHost />
         </MotionPreference>

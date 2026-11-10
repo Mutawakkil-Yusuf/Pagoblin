@@ -21,9 +21,9 @@ export default function ToolsGrid() {
   // Files dropped on the Home hero flow to merge automatically when many,
   // otherwise they wait here and the person picks a tool.
   return (
-    <AppPage width={720}>
+    <AppPage width="wide">
       <div className="relative mt-14 flex items-start justify-between md:mt-16">
-        <h1 className="font-display text-[34px] font-extrabold tracking-[-1px] text-cream">Tools</h1>
+        <h1 className="font-display text-[34px] font-extrabold tracking-[-1px] text-cream md:text-[44px]">Tools</h1>
         <div className="hidden md:block">
           <Pip mood="happy" size={60} />
         </div>
@@ -31,7 +31,7 @@ export default function ToolsGrid() {
       {homeFiles.length === 1 ? (
         <p className="mt-1 text-small text-muted">Pip has “{homeFiles[0].name}” ready. Pick a tool.</p>
       ) : null}
-      <div className="mt-4 grid grid-cols-2 gap-3 md:mt-6">
+      <div className="mt-4 grid grid-cols-2 gap-3 md:mt-8 md:grid-cols-3 md:gap-4">
         {TOOLS.map((t, i) => (
           <motion.div
             key={t.href}
@@ -41,7 +41,7 @@ export default function ToolsGrid() {
           >
             <Link
               href={t.href}
-              className={`flex h-[170px] flex-col justify-between rounded-[28px] p-4 text-ink ${t.bg}`}
+              className={`flex h-[170px] flex-col justify-between rounded-[28px] p-4 text-ink md:h-[200px] md:p-6 ${t.bg}`}
             >
               <span className="flex h-[42px] w-[42px] items-center justify-center rounded-[21px] bg-ink text-cream">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
