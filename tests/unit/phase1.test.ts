@@ -7,6 +7,7 @@ import { itemsToLines, linesToMarkdown, linesToPlainText } from "@/lib/engine/im
 import { boxToPixels, normalizeBox } from "@/lib/engine/impl/redact";
 import { protectArgs, unlockArgs } from "@/lib/engine/impl/qpdf";
 import { toWinAnsi } from "@/lib/engine/impl/winansi";
+import { pdfOpenOptions } from "@/lib/engine/worker-shared";
 
 function ab(bytes: Uint8Array): ArrayBuffer {
   return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
@@ -227,5 +228,18 @@ describe("toWinAnsi", () => {
 
   it("drops characters a standard font cannot encode", () => {
     expect(toWinAnsi("café ą Ж ا")).toBe("café");
+  });
+});
+
+describe("pdfOpenOptions", () => {
+  it("keeps pdf.js font fetching inside its own worker", () => {
+    // pdf.js otherwise reads document.baseURI to pick a fetch strategy. The
+    // display layer runs inside a Web Worker here, where document is absent,
+    // so getDocument threw ReferenceError and every PDF failed to open.
+    const opts = pdfOpenOptions(new ArrayBuffer(0));
+    expect(opts.useWorkerFetch).toBe(true);
+    expect(opts.cMapUrl).toBe("/pdfjs/cmaps/");
+    expect(opts.standardFontDataUrl).toBe("/pdfjs/standard_fonts/");
+    expect(opts.useSystemFonts).toBe(false);
   });
 });

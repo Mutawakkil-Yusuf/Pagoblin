@@ -69,10 +69,16 @@ export function getPdfjs(): Promise<typeof import("pdfjs-dist")> {
 
 export type PdfDoc = Awaited<ReturnType<Awaited<ReturnType<typeof getPdfjs>>["getDocument"]>["promise"]>;
 
-export async function openPdf(data: PdfData): Promise<PdfDoc> {
-  const pdfjs = await getPdfjs();
-  const bytes = await readPdfData(data);
-  const loadingTask = pdfjs.getDocument({
+/**
+ * pdf.js normally decides whether its worker fetches CMaps/fonts by reading
+ * `document.baseURI`. We run the display layer inside a Web Worker, where
+ * `document` does not exist, so setting `cMapUrl`/`standardFontDataUrl`
+ * without `useWorkerFetch` throws `ReferenceError: document is not defined`
+ * before a single page is parsed. Be explicit: the nested pdf.js worker does
+ * the fetching.
+ */
+export function pdfOpenOptions(bytes: ArrayBuffer) {
+  return {
     data: new Uint8Array(bytes),
     isEvalSupported: false,
     // PDFs that rely on the standard 14 fonts or CJK CMaps need these
@@ -84,7 +90,14 @@ export async function openPdf(data: PdfData): Promise<PdfDoc> {
     // Always use the bundled font data, not whatever fonts the device happens
     // to expose. That keeps previews and raster output consistent offline.
     useSystemFonts: false,
-  });
+    useWorkerFetch: true,
+  };
+}
+
+export async function openPdf(data: PdfData): Promise<PdfDoc> {
+  const pdfjs = await getPdfjs();
+  const bytes = await readPdfData(data);
+  const loadingTask = pdfjs.getDocument(pdfOpenOptions(bytes));
   return await loadingTask.promise;
 }
 

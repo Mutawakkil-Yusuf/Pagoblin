@@ -52,6 +52,7 @@ After pulling: run `npm install` (the postinstall copies Ghostscript to public/g
 - Entitlements: removed the `?pro=1`/`?pro=0` URL override. Batch and OCR are described as free; Pro lists future extras only.
 - PWA: `public/icons/` was gitignored while the manifest referenced it. Icons are regenerated and tracked. Work-offline now warms qpdf and OCR assets too, with an honest ~45 MB label.
 - Rendering: pdf.js now gets `standardFontDataUrl` and `cMapUrl` from the self-hosted `/pdfjs/` assets. Without them, PDFs that use the standard 14 fonts or CJK CMaps drew boxes or dropped glyphs in thumbnails, PDF→image, redaction and OCR. `useSystemFonts` is off so every device uses the same bundled font data, and Work offline warms the standard font files as well.
+- Rendering follow-up: the pdf.js display layer runs inside our own Web Workers, where `document` does not exist. Passing those two URLs made pdf.js evaluate `document.baseURI` while choosing a fetch strategy, so `getDocument` threw `ReferenceError: document is not defined` and every PDF failed at the page-count step with "Pip could not open that file. Try a smaller one." `useWorkerFetch: true` makes the nested pdf.js worker fetch the font and CMap data itself.
 
 ## Files rejected after a deploy
 
