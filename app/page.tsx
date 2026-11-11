@@ -210,6 +210,9 @@ export default function Home() {
             <SourceLink className="inline-flex h-[56px] items-center gap-2.5 rounded-pill bg-cream px-7 text-[16px] font-extrabold text-ink">
               <IconGitHub size={20} /> View on GitHub
             </SourceLink>
+            <Link href="/proof" className="inline-flex h-[56px] items-center rounded-pill bg-amber px-7 text-[16px] font-extrabold text-ink">
+              See the proof
+            </Link>
             <Link href="/privacy" className="inline-flex h-[56px] items-center rounded-pill border-2 border-line px-7 text-[16px] font-bold hover:border-amber">
               How privacy works
             </Link>
@@ -249,6 +252,7 @@ export default function Home() {
           </div>
           <nav className="flex flex-wrap gap-x-6 gap-y-2 self-start text-small text-muted md:flex-col md:gap-y-3" aria-label="Footer">
             <Link href="/privacy" className="hover:text-cream">Privacy</Link>
+            <Link href="/proof" className="hover:text-cream">Proof</Link>
             <Link href="/terms" className="hover:text-cream">Terms</Link>
             <Link href="/about" className="hover:text-cream">About</Link>
             <Link href="/pro" className="hover:text-cream">Pro</Link>

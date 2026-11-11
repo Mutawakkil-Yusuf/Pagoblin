@@ -169,6 +169,46 @@ export const metadataFAQ: FAQItem[] = [
   },
 ];
 
+export const sanitizeFAQ: FAQItem[] = [
+  {
+    q: "What is in the sanitizer report?",
+    a: "Metadata fields, JavaScript and launch actions, embedded files, form and XFA layers, page annotations, XMP metadata, and the fonts each page references. Each font is marked embedded or not, so you can see whether the file depends on fonts installed on the reader's device.",
+  },
+  {
+    q: "What does one-click clean remove?",
+    a: "It rebuilds the PDF from its pages into a fresh document. Metadata, document actions, JavaScript, attachments, forms, outlines, XMP and page annotations are not copied. Fonts used by the visible page content stay with the pages.",
+  },
+  {
+    q: "Will cleaning change how the pages look?",
+    a: "The visible page content is copied as-is. Links and form fields are annotations, so those are removed. A digital signature will not survive a rebuild.",
+  },
+  {
+    q: "Does it remove fonts?",
+    a: "No. Fonts that the visible text needs must stay, otherwise the pages would break. The report tells you which fonts are embedded and which are only referenced, so you can decide whether to clean or re-export the file.",
+  },
+  PRIVACY_LINE,
+];
+
+export const verifyFAQ: FAQItem[] = [
+  {
+    q: "What does Verify check?",
+    a: "It computes SHA-256, SHA-1 and SHA-512 hashes on your device, lists digital signature fields, and checks whether a signature's byte range still covers the whole file. You can also compare two PDFs page by page.",
+  },
+  {
+    q: "Does it validate the certificate?",
+    a: "No. Pagoblin checks the signature structure, not the certificate chain or the PKCS#7 message digest. A green result means the signature still covers the file; it is not a legal identity check. Use a dedicated validator when identity matters.",
+  },
+  {
+    q: "How does the comparison work?",
+    a: "If the two files are byte-for-byte identical, that is reported first. Otherwise Pagoblin compares page counts, document metadata and the extracted text on each page. It does not compare rendered pixels, so a colour or layout change with the same text may show as unchanged.",
+  },
+  {
+    q: "Are my files uploaded?",
+    a: "No. The hashing, signature inspection and comparison all run in a Web Worker on your device. The report downloads as a local text file.",
+  },
+  PRIVACY_LINE,
+];
+
 export const textFAQ: FAQItem[] = [
   {
     q: "What is the difference between text and Markdown?",

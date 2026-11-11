@@ -7,6 +7,9 @@ playwright-report/
 test-results/
 .env*.local
 
+# generated at build time by scripts/build-manifest.mjs
+public/build-manifest.json
+
 # generated or copied from node_modules by postinstall / npm run icons
 public/pdfjs/
 public/gs/

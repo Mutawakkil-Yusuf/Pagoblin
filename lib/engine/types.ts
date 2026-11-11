@@ -124,6 +124,35 @@ export type PdfRiskReport = {
   xfa: boolean;
 };
 
+export type PdfFontInfo = {
+  /** BaseFont name without the subset prefix, e.g. "Arial" or "Arial,Bold". */
+  name: string;
+  /** PDF font subtype, e.g. "TrueType", "Type0", "Type1". */
+  type: string;
+  /** Whether the file carries the font program itself. */
+  embedded: boolean;
+  /** Subset fonts usually have a six-letter prefix in the raw name. */
+  subset: boolean;
+  /** How many pages reference this font through their resources. */
+  pages: number;
+};
+
+export type PdfSignatureInfo = {
+  field: string;
+  kind: "signature" | "certification" | "field";
+  signed: boolean;
+  subFilter: string;
+  byteRange: number[];
+  /** The signed byte ranges still cover the file up to EOF. */
+  coversWholeFile: boolean;
+  /** Bytes exist after the signed ranges, so the file changed after signing. */
+  modifiedAfterSigning: boolean;
+  signedAt: string;
+  name: string;
+  reason: string;
+  location: string;
+};
+
 export type PdfMetadataInput = { file: PdfData };
 export type PdfMetadataOutput = {
   pageCount: number;
@@ -133,8 +162,67 @@ export type PdfMetadataOutput = {
 };
 export type PdfMetadataWriteInput = { file: PdfData; metadata: Partial<PdfMetadataFields> };
 export type PdfMetadataWriteOutput = { blob: Blob; metadata: PdfMetadataFields };
+
+export type PdfInspectInput = { file: PdfData };
+export type PdfInspectOutput = {
+  pageCount: number;
+  size: number;
+  metadata: PdfMetadataFields;
+  risks: PdfRiskReport;
+  fonts: PdfFontInfo[];
+  embeddedFiles: string[];
+  signatures: PdfSignatureInfo[];
+};
+
 export type PdfSanitizeInput = { file: PdfData };
-export type PdfSanitizeOutput = { blob: Blob; before: number; after: number; removed: PdfRiskReport };
+export type PdfSanitizeOutput = {
+  blob: Blob;
+  before: number;
+  after: number;
+  removed: PdfRiskReport;
+  /** A second scan of the rebuilt bytes, so the result is checkable. */
+  afterRisks: PdfRiskReport;
+};
+
+/* ---------- verify / compare ---------- */
+export type PdfFileSummary = {
+  name: string;
+  size: number;
+  pageCount: number;
+  sha256: string;
+  sha1: string;
+  sha512: string;
+  metadata: PdfMetadataFields;
+  signatures: PdfSignatureInfo[];
+  fonts: PdfFontInfo[];
+  risks: PdfRiskReport;
+};
+
+export type PdfVerifyInput = { file: PdfData; name?: string };
+export type PdfVerifyOutput = PdfFileSummary;
+
+export type PdfCompareInput = {
+  a: PdfData;
+  b: PdfData;
+  aName: string;
+  bName: string;
+};
+export type PdfComparePage = {
+  page: number;
+  status: "same" | "changed" | "only-a" | "only-b";
+};
+export type PdfCompareMetadataChange = {
+  field: keyof PdfMetadataFields;
+  a: string;
+  b: string;
+};
+export type PdfCompareOutput = {
+  identical: boolean;
+  a: PdfFileSummary;
+  b: PdfFileSummary;
+  pages: PdfComparePage[];
+  metadataChanges: PdfCompareMetadataChange[];
+};
 
 /* ---------- PDF text / markdown ---------- */
 export type PdfTextFormat = "text" | "markdown";

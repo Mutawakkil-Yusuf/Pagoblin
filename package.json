@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/build-manifest.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/build-manifest.mjs",
     "build": "next build",
+    "postbuild": "node scripts/build-manifest.mjs",
     "start": "next start",
     "lint": "NODE_OPTIONS=--max-old-space-size=2048 tsc --noEmit",
     "test": "NODE_OPTIONS=--max-old-space-size=2048 vitest run",

@@ -23,8 +23,12 @@ import type {
   MergeOutput,
   OrganizeInput,
   OrganizeOutput,
+  PdfCompareInput,
+  PdfCompareOutput,
   PdfData,
   PdfInfoOutput,
+  PdfInspectInput,
+  PdfInspectOutput,
   PdfMetadataInput,
   PdfMetadataOutput,
   PdfMetadataWriteInput,
@@ -33,6 +37,8 @@ import type {
   PdfSanitizeOutput,
   PdfTextInput,
   PdfTextOutput,
+  PdfVerifyInput,
+  PdfVerifyOutput,
   PdfToImageInput,
   PdfToImageOutput,
   ProtectInput,
@@ -187,6 +193,7 @@ const mkMetadata = (): Worker => new Worker(new URL("./workers/metadata.worker.t
 const mkPdfText = (): Worker => new Worker(new URL("./workers/pdf-text.worker.ts", import.meta.url), { type: "module" });
 const mkRedact = (): Worker => new Worker(new URL("./workers/redact.worker.ts", import.meta.url), { type: "module" });
 const mkForms = (): Worker => new Worker(new URL("./workers/forms.worker.ts", import.meta.url), { type: "module" });
+const mkVerify = (): Worker => new Worker(new URL("./workers/verify.worker.ts", import.meta.url), { type: "module" });
 
 const mk = {
   merge: mkMerge,
@@ -200,6 +207,7 @@ const mk = {
   pdfText: mkPdfText,
   redact: mkRedact,
   forms: mkForms,
+  verify: mkVerify,
 };
 export const WORKERS = Object.keys(mk);
 
@@ -215,12 +223,15 @@ export const runPdfInfo = makeJobRunner<{ file: PdfData }, PdfInfoOutput>(mkThum
 export const runThumbs = makeJobRunner<ThumbsInput, ThumbsOutput>(mkThumbs, "thumbs");
 export const runOrganize = makeJobRunner<OrganizeInput, OrganizeOutput>(mkOrganize, "organize");
 export const runMetadataRead = makeJobRunner<PdfMetadataInput, PdfMetadataOutput>(mkMetadata, "read");
+export const runSanitizeInspect = makeJobRunner<PdfInspectInput, PdfInspectOutput>(mkMetadata, "inspect");
 export const runMetadataWrite = makeJobRunner<PdfMetadataWriteInput, PdfMetadataWriteOutput>(mkMetadata, "write");
 export const runSanitize = makeJobRunner<PdfSanitizeInput, PdfSanitizeOutput>(mkMetadata, "sanitize");
 export const runPdfText = makeJobRunner<PdfTextInput, PdfTextOutput>(mkPdfText, "extract");
 export const runRedact = makeJobRunner<RedactInput, RedactOutput>(mkRedact, "redact");
 export const runFormInspect = makeJobRunner<FormInspectInput, FormInspectOutput>(mkForms, "inspect");
 export const runFormFill = makeJobRunner<FormFillInput, FormFillOutput>(mkForms, "fill");
+export const runVerify = makeJobRunner<PdfVerifyInput, PdfVerifyOutput>(mkVerify, "verify");
+export const runCompare = makeJobRunner<PdfCompareInput, PdfCompareOutput>(mkVerify, "compare");
 
 /* ---------- qpdf (protect / unlock) ---------- */
 type QpdfReply = {

@@ -1,36 +1,17 @@
 import type { NextConfig } from "next";
 import withSerwist from "@serwist/next";
+import { buildCsp } from "./lib/csp";
 
 const isDev = process.env.NODE_ENV === "development";
 
 // Analytics host is optional and only wired when NEXT_PUBLIC_PLAUSIBLE_DOMAIN is set.
 const plausibleHost = process.env.NEXT_PUBLIC_PLAUSIBLE_HOST || "https://plausible.io";
-const analytics = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN ? ` ${plausibleHost}` : "";
+const analyticsHost = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN ? plausibleHost : "";
 
-// connect-src stays 'self' (+ Plausible). File bytes can never leave the device;
-// the privacy e2e test enforces this at runtime.
-const csp = [
-  `default-src 'self'`,
-  // 'wasm-unsafe-eval' is required to instantiate Emscripten/JS engines (Ghostscript WASM)
-  // in workers. 'unsafe-inline' is required by the App Router's inline RSC bootstrap
-  // scripts: every page stays statically prerendered (offline-first) instead of going
-  // dynamic for per-request nonces. There is no server-rendered user data, so the
-  // reachable XSS surface stays nil; the hard guarantees (connect-src 'self',
-  // zero third origins) are unaffected and enforced by the privacy e2e.
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${analytics}`,
-  `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' data: blob:`,
-  `media-src 'self' data: blob:`,
-  `font-src 'self' data:`,
-  `connect-src 'self'${analytics}`,
-  `worker-src 'self' blob:`,
-  `object-src 'none'`,
-  `base-uri 'none'`,
-  `form-action 'none'`,
-  `frame-ancestors 'none'`,
-  // Dev needs eval for the react-refresh runtime; production keeps the strict policy.
-  isDev ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'${analytics}` : "",
-].join("; ");
+// connect-src stays 'self' (+ optional analytics). File bytes can never leave
+// the device; the privacy e2e test enforces this at runtime. The proof page
+// imports the same builder, so the policy it displays is the policy we send.
+const csp = buildCsp({ dev: isDev, analyticsHost });
 
 // Every route is prerendered. Precache their HTML so a first visit that goes offline still opens them.
 const ROUTES = [
@@ -49,10 +30,13 @@ const ROUTES = [
   "/sign-pdf",
   "/protect-pdf",
   "/pdf-metadata",
+  "/sanitize-pdf",
+  "/verify-pdf",
   "/redact-pdf",
   "/form-pdf",
   "/ocr-pdf",
   "/batch-pdf",
+  "/proof",
   "/flows",
   "/done",
   "/settings",
@@ -71,6 +55,7 @@ const PUBLIC_ASSETS = [
   "/favicon.svg",
   "/logo-lockup.svg",
   "/manifest.webmanifest",
+  "/build-manifest.json",
   "/gs-worker.js",
   "/qpdf-worker.js",
   "/ocr/worker.min.js",

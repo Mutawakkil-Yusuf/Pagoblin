@@ -33,6 +33,8 @@ export const useToolFiles = create<ToolFiles>()((set) => ({
     organize: [],
     protect: [],
     metadata: [],
+    sanitize: [],
+    verify: [],
     text: [],
     redact: [],
     form: [],

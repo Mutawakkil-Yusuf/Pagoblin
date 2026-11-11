@@ -18,6 +18,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/sign-pdf",
     "/protect-pdf",
     "/pdf-metadata",
+    "/sanitize-pdf",
+    "/verify-pdf",
     "/redact-pdf",
     "/form-pdf",
     "/ocr-pdf",
@@ -26,6 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/pro",
     "/about",
     "/privacy",
+    "/proof",
     "/terms",
   ];
   const now = new Date();

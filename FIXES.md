@@ -60,3 +60,11 @@ After pulling: run `npm install` (the postinstall copies Ghostscript to public/g
 - Picker: PDF tools ask for `.pdf`, `application/pdf` and `application/octet-stream`, with the extension first. Android pickers that only read one token, or that report an unknown type, no longer grey PDFs out as "not supported".
 - Picker: focus is only treated as "the picker closed" after the page was blurred first. Some Android builds fire focus while the picker is opening; finishing then removed the input and silently dropped the choice.
 - Updates: a new service worker claims the page immediately after a deploy, leaving the open tab on the previous build. Its worker chunks may already be gone, so every tool failed until a reload. The app now watches `controllerchange` and offers a Reload action, and a worker that cannot load fails fast with the same advice instead of hanging forever.
+
+## Phase 2: proof, sanitizer report and Verify
+
+- Added `/proof`: live network monitor, exact CSP, reproducible source hash, commit/source links and a downloadable privacy receipt. The CSP string is shared with `next.config.ts` through `lib/csp.ts`, so the page cannot show a different policy from the one sent.
+- Added `scripts/build-manifest.mjs` and `predev`/`prebuild`/`postbuild` hooks. The manifest records the commit, a SHA-256 over sorted source files, and the service-worker hash; it is generated, not committed.
+- Added `/sanitize-pdf`: a dedicated report for metadata, scripts, attachments, forms, annotations and page-resource fonts, with embedded/subset flags. One-click clean returns a second risk scan of the rebuilt bytes.
+- Added `/verify-pdf`: local SHA-256/SHA-1/SHA-512 hashes, signature-field and ByteRange coverage inspection, and a two-PDF comparison over metadata and extracted page text. The report downloads as plain text.
+- Added unit coverage for PDF inspection, signature fields, sanitizer output, hashing and identical comparison. The suite is 54 tests; lint and the production build pass.

@@ -12,6 +12,13 @@ export default function PrivacyPage() {
       <h1 className="font-display text-h1 font-extrabold">Privacy</h1>
       <p className="mt-2 text-body text-muted">Last updated: today, and only for as long as you keep reading.</p>
 
+      <p className="mt-4 text-body">
+        <a className="font-bold text-amber underline" href="/proof">
+          See the proof
+        </a>{" "}
+        — a live network monitor, the exact CSP, and the source hash for this build.
+      </p>
+
       <h2 className="mt-8 font-display text-h2">The short version</h2>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-body">
         <li>Your files never leave your device. Every tool runs in your browser, inside Web Workers, with no upload code whatsoever.</li>

@@ -29,7 +29,7 @@ function iso(date: Date | undefined): string {
   }
 }
 
-function readFields(doc: PDFDocument): PdfMetadataFields {
+export function readMetadataFields(doc: PDFDocument): PdfMetadataFields {
   const safe = (fn: () => string | undefined, fallback = ""): string => {
     try {
       return fn() ?? fallback;
@@ -61,7 +61,7 @@ export async function readMetadataMain(
   return {
     pageCount: doc.getPageCount(),
     size: bytes.byteLength,
-    metadata: readFields(doc),
+    metadata: readMetadataFields(doc),
     risks: scanPdfRisks(bytes),
   };
 }
@@ -97,7 +97,7 @@ export async function writeMetadataMain(
   onProgress?.(1, "Saved");
   return {
     blob: new Blob([u8Part(bytes)], { type: "application/pdf" }),
-    metadata: readFields(doc),
+    metadata: readMetadataFields(doc),
   };
 }
 
@@ -135,11 +135,13 @@ export async function sanitizeMain(
   out.setModificationDate(new Date());
 
   const bytes = await out.save({ useObjectStreams: true });
+  const afterRisks = scanPdfRisks(bytes);
   onProgress?.(1, "Clean");
   return {
     blob: new Blob([u8Part(bytes)], { type: "application/pdf" }),
     before: originalBytes.byteLength,
     after: bytes.byteLength,
     removed,
+    afterRisks,
   };
 }
