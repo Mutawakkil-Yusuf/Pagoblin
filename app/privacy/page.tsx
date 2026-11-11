@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { GITHUB_ISSUES_URL, SUPPORT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy — files never leave your device",
@@ -24,7 +25,7 @@ export default function PrivacyPage() {
         <li>Your files never leave your device. Every tool runs in your browser, inside Web Workers, with no upload code whatsoever.</li>
         <li>The OCR engine, its language packs and the encryption engine are served by Pagoblin itself and run on your device.</li>
         <li>We have no accounts, no sign-up, no email capture.</li>
-        <li>This build sets no cookies and runs no analytics.</li>
+        <li>This build ships no analytics by default and sets no cookies.</li>
         <li>Saved flows live in your browser&rsquo;s IndexedDB, on your device only.</li>
       </ul>
 
@@ -38,6 +39,14 @@ export default function PrivacyPage() {
         and the service worker only caches the app&rsquo;s own files so it works offline.
       </p>
 
+      <h2 className="mt-8 font-display text-h2">Metrics</h2>
+      <p className="mt-3 text-body">
+        This build ships no analytics. If the optional Plausible integration is enabled by the
+        operator, it receives page URLs and aggregate counts only — never file names, file contents,
+        document text or an identity. There is no account to connect a visit to. The goal is to count
+        activations, not people.
+      </p>
+
       <h2 className="mt-8 font-display text-h2">How this could change</h2>
       <p className="mt-3 text-body">
         If Pagoblin Pro ever adds server-side extras (such as Office conversion), those features will be
@@ -47,7 +56,28 @@ export default function PrivacyPage() {
 
       <h2 className="mt-8 font-display text-h2">Contact</h2>
       <p className="mt-3 text-body">
-        Write to <a className="text-amber underline" href="mailto:hello@pagoblin.app">hello@pagoblin.app</a>.
+        {SUPPORT_EMAIL ? (
+          <>
+            Write to{" "}
+            <a className="text-amber underline" href={`mailto:${SUPPORT_EMAIL}`}>
+              {SUPPORT_EMAIL}
+            </a>
+            .
+          </>
+        ) : (
+          <>
+            Open an issue at{" "}
+            <a
+              className="text-amber underline"
+              href={GITHUB_ISSUES_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              github.com/Mutawakkil-Yusuf/Pagoblin/issues
+            </a>
+            . There is no support mailbox on a custom domain yet.
+          </>
+        )}
       </p>
     </main>
   );

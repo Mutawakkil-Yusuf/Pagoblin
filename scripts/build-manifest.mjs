@@ -36,6 +36,8 @@ const SOURCE_FILES = [
   "README.md",
   "DECISIONS.md",
   "FIXES.md",
+  "LICENSE",
+  "THIRD_PARTY_NOTICES.md",
   ".gitignore",
   // Hand-written classic workers; the generated sw.js is hashed separately.
   "public/gs-worker.js",

@@ -26,6 +26,27 @@ const WHY = [
   { t: "Hits the exact size", d: "Need under 2 MB for a visa portal? Say the number and Pip squeezes to fit.", bg: "bg-peach" },
 ] as const;
 
+const GUIDES = [
+  {
+    href: "/compress-pdf-to-2mb",
+    title: "Compress to 2 MB",
+    sub: "For visa portals, job forms and upload limits.",
+    bg: "bg-orange text-ink",
+  },
+  {
+    href: "/redact-pdf-offline",
+    title: "Redact offline",
+    sub: "Remove the content, not just cover it.",
+    bg: "bg-cream text-ink",
+  },
+  {
+    href: "/offline-pdf-tools",
+    title: "Offline PDF tools",
+    sub: "How the local model works, and its limits.",
+    bg: "bg-sky text-ink",
+  },
+] as const;
+
 const wrap = "mx-auto w-full max-w-[1120px] px-page-x md:px-8";
 
 function Tick({ ok }: { ok: boolean }) {
@@ -79,6 +100,8 @@ export default function Home() {
         <nav aria-label="Primary" className="flex items-center gap-1">
           <a href="#tools" className="hidden rounded-pill px-3 py-2 font-medium hover:bg-surface md:inline-block">Tools</a>
           <a href="#why" className="hidden rounded-pill px-3 py-2 font-medium hover:bg-surface md:inline-block">Why Pagoblin</a>
+          <Link href="/compare" className="hidden rounded-pill px-3 py-2 font-medium hover:bg-surface lg:inline-block">Compare</Link>
+          <Link href="/docs" className="hidden rounded-pill px-3 py-2 font-medium hover:bg-surface lg:inline-block">Docs</Link>
           <SourceLink className="hidden items-center gap-2 rounded-pill px-3 py-2 font-medium hover:bg-surface md:inline-flex">
             <IconGitHub size={18} /> Source
           </SourceLink>
@@ -189,6 +212,48 @@ export default function Home() {
             </ul>
           </div>
         </div>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/compare" className="inline-flex h-[52px] items-center rounded-pill bg-amber px-6 font-bold text-ink">
+            Read the honest comparisons
+          </Link>
+          <Link href="/offline-pdf-tools" className="inline-flex h-[52px] items-center rounded-pill border-2 border-line bg-surface px-6 font-bold text-cream hover:border-amber">
+            Offline PDF tools
+          </Link>
+        </div>
+      </section>
+
+      {/* Guides */}
+      <section className={`${wrap} pb-20 lg:pb-28`}>
+        <h2 className="font-display text-[clamp(32px,5vw,48px)] font-extrabold leading-[1.05] tracking-[-0.03em]">
+          Guides for the jobs people actually search for
+        </h2>
+        <p className="mt-3 max-w-[620px] text-[18px] leading-[28px] text-muted">
+          Short, practical pages for the things people need to finish — not keyword filler.
+        </p>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {GUIDES.map((guide) => (
+            <Link
+              key={guide.href}
+              href={guide.href}
+              className={`flex min-h-[180px] flex-col justify-between rounded-[28px] p-6 transition-transform hover:-translate-y-1 ${guide.bg}`}
+            >
+              <span className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-ink text-cream">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
+              <span>
+                <span className="block font-display text-[24px] font-extrabold tracking-[-0.02em]">{guide.title}</span>
+                <span className="mt-1 block text-[15px] font-medium">{guide.sub}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+        <div className="mt-6 flex flex-wrap gap-4 text-small text-muted">
+          <Link href="/docs" className="hover:text-cream">Read the docs</Link>
+          <Link href="/faq" className="hover:text-cream">FAQ</Link>
+          <Link href="/compare" className="hover:text-cream">Compare with cloud suites</Link>
+        </div>
       </section>
 
       {/* Open source */}
@@ -250,12 +315,19 @@ export default function Home() {
             <p className="mt-3 max-w-[340px] text-small text-muted">Built so your files stay yours.</p>
             <Credit className="mt-6" />
           </div>
-          <nav className="flex flex-wrap gap-x-6 gap-y-2 self-start text-small text-muted md:flex-col md:gap-y-3" aria-label="Footer">
+          <nav className="grid grid-cols-2 gap-x-6 gap-y-2 self-start text-small text-muted md:gap-y-3" aria-label="Footer">
+            <Link href="/app/tools" className="hover:text-cream">Tools</Link>
+            <Link href="/compare" className="hover:text-cream">Compare</Link>
+            <Link href="/docs" className="hover:text-cream">Docs</Link>
+            <Link href="/faq" className="hover:text-cream">FAQ</Link>
+            <Link href="/support" className="hover:text-cream">Support</Link>
+            <Link href="/status" className="hover:text-cream">Status</Link>
             <Link href="/privacy" className="hover:text-cream">Privacy</Link>
             <Link href="/proof" className="hover:text-cream">Proof</Link>
             <Link href="/terms" className="hover:text-cream">Terms</Link>
             <Link href="/about" className="hover:text-cream">About</Link>
             <Link href="/pro" className="hover:text-cream">Pro</Link>
+            <a href={`${REPO_URL}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer" className="hover:text-cream">Licence</a>
             <SourceLink className="hover:text-cream">Source on GitHub</SourceLink>
           </nav>
         </div>

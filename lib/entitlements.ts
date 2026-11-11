@@ -1,8 +1,11 @@
 /**
  * Entitlements. V1: everything is free, including batch processing and OCR.
- * Pro is not for sale and only lists future extras (more saved flows beyond
- * the free three, and Office conversion when a server-backed path exists).
- * A real licence check plugs in here with no call-site changes.
+ *
+ * Phase 3 is distribution-first: Pro is not for sale, there is no checkout and
+ * no tool is gated. The planned Pro licence is a one-time offline key for
+ * future extras (a native desktop app and Teams self-hosting), not a
+ * subscription and not an account wall. A real licence check plugs in here
+ * with no call-site changes.
  */
 export const FREE_FLOW_LIMIT = 3;
 
@@ -13,8 +16,9 @@ export function isPro(): boolean {
 }
 
 export const proFeatures = [
+  "Native desktop app, when it is ready",
+  "Teams self-hosting, when it is ready",
   "More saved flows on this device",
-  "Word and PowerPoint, when it is ready",
   "A way to support the project",
 ] as const;
 

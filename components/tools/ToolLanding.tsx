@@ -2,9 +2,15 @@
 
 /** Tool page scaffold: working tool on top, short explainer + FAQ + privacy
  * note below (the SEO half). Same AppPage shell for phone and desktop. */
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AppPage } from "@/components/nav/AppPage";
 import { Pip } from "@/components/pip/Pip";
 import { FaqList } from "@/components/ui/FaqList";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { RelatedTools } from "@/components/seo/RelatedTools";
+import { breadcrumbSchema, faqPageSchema, webApplicationSchema } from "@/lib/seo/schema";
+import { toolSeoFor } from "@/lib/seo/tools";
 import { useToolFiles } from "@/lib/store/docs";
 import type { FileItem } from "@/lib/files";
 import { DropZone } from "@/components/ui/DropZone";
@@ -22,11 +28,42 @@ export function ToolLanding(props: {
   about?: string;
 }) {
   const { title, intro, faq, children, about } = props;
+  const pathname = usePathname();
+  const tool = toolSeoFor(pathname);
+  const description = about || intro;
+  const crumbs = [
+    { name: "Home", path: "/" },
+    { name: "Tools", path: "/app/tools" },
+    { name: tool?.name || title, path: pathname },
+  ];
+
   return (
     <AppPage width="tool">
+      <JsonLd
+        data={[
+          breadcrumbSchema(crumbs),
+          faqPageSchema(faq),
+          webApplicationSchema({
+            name: tool ? `${tool.name} — Pagoblin` : `${title} — Pagoblin`,
+            description,
+            path: pathname,
+          }),
+        ]}
+      />
       {/* Phone: stacked. Laptop (1024+): the tool on the left, explainer and FAQ on the right. */}
       <div className="mt-8 lg:mt-12 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-14">
         <div className="min-w-0">
+          <nav aria-label="Breadcrumb" className="mb-3 text-small text-muted">
+            <Link href="/" className="hover:text-cream">
+              Home
+            </Link>
+            <span aria-hidden="true"> / </span>
+            <Link href="/app/tools" className="hover:text-cream">
+              Tools
+            </Link>
+            <span aria-hidden="true"> / </span>
+            <span className="text-cream">{tool?.name || title}</span>
+          </nav>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h1 className="font-display text-h2 font-extrabold tracking-[-1px] text-cream md:text-[40px] md:leading-[44px]">
@@ -46,6 +83,7 @@ export function ToolLanding(props: {
           {about ? <p className="mt-3 text-body leading-6 text-muted">{about}</p> : null}
           <FaqList items={faq} />
           <OwnerNote />
+          <RelatedTools />
         </aside>
       </div>
     </AppPage>

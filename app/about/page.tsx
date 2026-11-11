@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Pip } from "@/components/pip/Pip";
 import { Credit, IconGitHub, SourceLink } from "@/components/ui/Social";
+import { REPO_URL } from "@/lib/links";
 
 export const metadata: Metadata = {
   title: "About — why Pagoblin exists",
@@ -37,6 +38,41 @@ export default function AboutPage() {
           <IconGitHub size={20} /> View source on GitHub
         </SourceLink>
       </div>
+
+      <section aria-labelledby="next" className="mt-12 border-t border-line pt-8">
+        <h2 id="next" className="font-display text-h2">Where to go next</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Link href="/proof" className="rounded-card-l border border-line bg-surface p-5 hover:border-amber">
+            <span className="font-bold text-cream">See the proof</span>
+            <span className="mt-1 block text-small text-muted">Live network monitor, CSP and build hash.</span>
+          </Link>
+          <Link href="/compare" className="rounded-card-l border border-line bg-surface p-5 hover:border-amber">
+            <span className="font-bold text-cream">Compare with cloud suites</span>
+            <span className="mt-1 block text-small text-muted">Smallpdf, iLovePDF and Adobe, honestly.</span>
+          </Link>
+          <Link href="/docs" className="rounded-card-l border border-line bg-surface p-5 hover:border-amber">
+            <span className="font-bold text-cream">Read the docs</span>
+            <span className="mt-1 block text-small text-muted">Install, offline mode, batch and troubleshooting.</span>
+          </Link>
+          <Link href="/offline-pdf-tools" className="rounded-card-l border border-line bg-surface p-5 hover:border-amber">
+            <span className="font-bold text-cream">Offline PDF tools</span>
+            <span className="mt-1 block text-small text-muted">What works with the Wi-Fi off, and what does not.</span>
+          </Link>
+        </div>
+      </section>
+
+      <p className="mt-8 text-small text-muted">
+        Pagoblin is free software under the{" "}
+        <a href={`${REPO_URL}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer" className="text-amber underline">
+          GNU AGPL-3.0
+        </a>
+        . Third-party notices are in{" "}
+        <a href={`${REPO_URL}/blob/main/THIRD_PARTY_NOTICES.md`} target="_blank" rel="noopener noreferrer" className="text-amber underline">
+          THIRD_PARTY_NOTICES.md
+        </a>
+        .
+      </p>
+
       <Credit className="mt-12 border-t border-line pt-8" />
     </main>
   );

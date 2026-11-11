@@ -331,3 +331,47 @@ export const flowsFAQ: FAQItem[] = [
     a: "Three for free. More saved flows come with Pro later.",
   },
 ];
+
+export const redactOfflineFAQ: FAQItem[] = [
+  {
+    q: "What does “offline” mean here?",
+    a: "The redaction runs in this browser tab, on your device, with no upload and no server. After the page has loaded once, it also works with the network switched off.",
+  },
+  {
+    q: "Does covering text with a black box remove it?",
+    a: "No. A rectangle drawn over live text leaves the words in the file. Pagoblin rasterises the page, paints the marked areas into the pixels, and writes a new PDF from those images, so the covered content is gone.",
+  },
+  {
+    q: "Is the output still searchable?",
+    a: "No. Redaction flattens the marked pages on purpose, so the text underneath cannot be selected or copied. If you need searchable text, OCR the redacted output or keep an unredacted working copy somewhere safe.",
+  },
+  {
+    q: "Can I check that the content is really gone?",
+    a: "Yes. Run the redacted file through Verify to compare it with the original, or use the sanitizer report to inspect what is still embedded. Neither step sends the file anywhere.",
+  },
+  {
+    q: "Is offline redaction legally sufficient?",
+    a: "That depends on your jurisdiction and the document. Pagoblin removes the pixels and rebuilds the file; it does not provide legal advice or a certified redaction audit trail.",
+  },
+  PRIVACY_LINE,
+];
+
+export const compressOfflineFAQ: FAQItem[] = [
+  {
+    q: "Can I compress a PDF without internet?",
+    a: "Yes, after the page has loaded once. The compress engines are cached on the device, so the job runs locally with the network off. Settings → Work offline downloads the heavier engines ahead of time.",
+  },
+  {
+    q: "Does the file get uploaded to a compression server?",
+    a: "No. There is no upload step. The PDF is read into the tab, processed by a Web Worker on your device, and written back as a download.",
+  },
+  {
+    q: "Can I choose the target size?",
+    a: "Yes. Enter a target in MB or KB and Pagoblin measures the result. If the first pass cannot reach it, the tool tries a stronger setting instead of guessing.",
+  },
+  {
+    q: "Why is the result sometimes larger than expected?",
+    a: "A PDF that is already mostly compressed images may not shrink much without visible damage. Pagoblin reports the measured size so you can decide whether the quality trade-off is worth it.",
+  },
+  PRIVACY_LINE,
+];

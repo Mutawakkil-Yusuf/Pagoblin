@@ -4,20 +4,19 @@ import { ToastHost } from "@/components/ui/ToastHost";
 import { MotionPreference } from "@/components/MotionPreference";
 import { SoundBoot } from "@/components/SoundBoot";
 import { PwaBoot } from "@/components/pwa/PwaBoot";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Brand fonts are self-hosted via @font-face in globals.css — no runtime
 // Google Fonts request (CSP stays `connect-src 'self'`), and builds work
 // offline. Fallbacks are system sans stacks.
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://pagoblin.app";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Pagoblin — free, private PDF tools",
     template: "%s · Pagoblin",
   },
-  description: "Merge, split, compress and sign PDFs right in your browser. Pip does the chewing. Nothing is uploaded.",
-  applicationName: "Pagoblin",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
@@ -27,7 +26,26 @@ export const metadata: Metadata = {
     shortcut: ["/favicon.svg"],
     apple: "/icons/apple-touch-icon.png",
   },
-  openGraph: { siteName: "Pagoblin", type: "website" },
+  openGraph: {
+    siteName: SITE_NAME,
+    type: "website",
+    title: "Pagoblin — free, private PDF tools",
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Pagoblin — private PDF tools that never ask for your files",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pagoblin — free, private PDF tools",
+    description: SITE_DESCRIPTION,
+    images: ["/og.png"],
+  },
   robots: { index: true, follow: true },
 };
 

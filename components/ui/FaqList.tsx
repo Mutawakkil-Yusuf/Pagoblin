@@ -1,8 +1,10 @@
 "use client";
 
-/** FAQ accordion used by tool landing pages; one item open at a time. */
+/** FAQ accordion used by tool landing pages; one item open at a time.
+ * Every answer stays in the DOM (collapsed with height/opacity) so the page
+ * content matches the FAQPage schema and works without JavaScript. */
 import { useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import type { FAQItem } from "@/components/tools/ToolLanding";
 import { springs } from "@/lib/motion";
 
@@ -30,22 +32,18 @@ export function FaqList({ items }: { items: FAQItem[] }) {
                 +
               </motion.span>
             </button>
-            <AnimatePresence initial={false}>
-              {isOpen && (
-                <motion.div
-                  id={panelId}
-                  role="region"
-                  aria-labelledby={btnId}
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                  className="overflow-hidden"
-                >
-                  <p className="px-4 pb-4 text-body leading-6 text-muted">{item.a}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <motion.div
+              id={panelId}
+              role="region"
+              aria-labelledby={btnId}
+              aria-hidden={!isOpen}
+              initial={false}
+              animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden"
+            >
+              <p className="px-4 pb-4 text-body leading-6 text-muted">{item.a}</p>
+            </motion.div>
           </div>
         );
       })}

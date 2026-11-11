@@ -40,8 +40,9 @@ export default function TermsPage() {
 
       <h2 className="mt-8 font-display text-h2">Pro, if and when</h2>
       <p className="mt-3 text-body">
-        If paid features arrive, they will be one-off purchases with their own terms shown before you pay —
-        never a subscription you forget about.
+        If paid features arrive, the individual Pro licence will be a one-off purchase with its own terms
+        shown before you pay — never a subscription you forget about. A Teams self-host licence, if it
+        ships, will be annual and clearly separate. Nothing is for sale today.
       </p>
     </main>
   );

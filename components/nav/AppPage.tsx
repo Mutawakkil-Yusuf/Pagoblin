@@ -33,7 +33,10 @@ export function AppPage(props: {
 }) {
   const { title, back, children, width = 480, chrome = true } = props;
   useEffect(() => {
-    document.title = title ? `${title} · Pagoblin` : "Pagoblin";
+    // Only pages that opt in with a title override the document title. Pages
+    // without one keep the title Next generated from their metadata instead of
+    // being reset to the bare app name.
+    if (title) document.title = `${title} · Pagoblin`;
   }, [title]);
   return (
     <div className="min-h-dvh">
