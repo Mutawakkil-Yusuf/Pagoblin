@@ -1,8 +1,8 @@
 /** Thumbs worker: page counts, encryption detection and lazy thumbnail rendering. */
-import type { PdfInfoOutput, ThumbsInput, ThumbsOutput } from "../types";
+import type { PdfData, PdfInfoOutput, ThumbsInput, ThumbsOutput } from "../types";
 import { assertNotCancelled, exposeJobs, resetCancel, openPdfChecked, renderPageToOffscreen } from "../worker-shared";
 
-async function info(file: ArrayBuffer): Promise<PdfInfoOutput> {
+async function info(file: PdfData): Promise<PdfInfoOutput> {
   try {
     const doc = await openPdfChecked(file);
     return { pageCount: doc.numPages, encrypted: false };
@@ -15,8 +15,7 @@ async function info(file: ArrayBuffer): Promise<PdfInfoOutput> {
 
 async function thumbs(input: ThumbsInput, onProgress: (p: number, label?: string) => void): Promise<ThumbsOutput> {
   resetCancel();
-  const file = input.file instanceof ArrayBuffer ? input.file : await input.file.arrayBuffer();
-  const doc = await openPdfChecked(file);
+  const doc = await openPdfChecked(input.file);
   const out: { page: number; blob: Blob }[] = [];
   for (let i = 0; i < input.pages.length; i++) {
     assertNotCancelled();
@@ -30,6 +29,6 @@ async function thumbs(input: ThumbsInput, onProgress: (p: number, label?: string
 }
 
 exposeJobs({
-  info: (input, _p) => info((input as { file: ArrayBuffer }).file),
+  info: (input, _p) => info((input as { file: PdfData }).file),
   thumbs: (input, p) => thumbs(input as ThumbsInput, p),
 });

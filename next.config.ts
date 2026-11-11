@@ -33,8 +33,62 @@ const csp = [
 ].join("; ");
 
 // Every route is prerendered. Precache their HTML so a first visit that goes offline still opens them.
-const ROUTES = ["/", "/app", "/app/tools", "/merge-pdf", "/split-pdf", "/compress-pdf", "/convert-pdf", "/sign-pdf", "/flows", "/done", "/settings", "/about", "/privacy", "/terms", "/pro"];
+const ROUTES = [
+  "/",
+  "/app",
+  "/app/tools",
+  "/merge-pdf",
+  "/split-pdf",
+  "/organize-pdf",
+  "/compress-pdf",
+  "/compress-pdf-to-2mb",
+  "/convert-pdf",
+  "/pdf-to-jpg",
+  "/jpg-to-pdf",
+  "/pdf-to-text",
+  "/sign-pdf",
+  "/protect-pdf",
+  "/pdf-metadata",
+  "/redact-pdf",
+  "/form-pdf",
+  "/ocr-pdf",
+  "/batch-pdf",
+  "/flows",
+  "/done",
+  "/settings",
+  "/about",
+  "/privacy",
+  "/terms",
+  "/pro",
+  "/share",
+];
 const BUILD_REV = String(Date.now());
+
+// Small public assets that make the installed app feel complete offline. Heavy
+// engines (/gs, /pdfjs, /qpdf, /ocr) are deliberately absent: they are cached
+// on first use or by Settings → Work offline, not on every first visit.
+const PUBLIC_ASSETS = [
+  "/favicon.svg",
+  "/logo-lockup.svg",
+  "/manifest.webmanifest",
+  "/gs-worker.js",
+  "/qpdf-worker.js",
+  "/ocr/worker.min.js",
+  "/fonts/bricolage-latin.woff2",
+  "/fonts/bricolage-latin-ext.woff2",
+  "/fonts/bricolage-vietnamese.woff2",
+  "/fonts/dmsans-latin.woff2",
+  "/fonts/dmsans-latin-ext.woff2",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/icon-maskable-512.png",
+  "/icons/apple-touch-icon.png",
+  "/icons/favicon-64.png",
+  "/screenshots/phone-home.png",
+  "/screenshots/phone-compress.png",
+  "/screenshots/desktop-home.png",
+  "/screenshots/desktop-tools.png",
+];
 
 const withSerwistInstance = withSerwist({
   swSrc: "app/sw.ts",
@@ -43,9 +97,8 @@ const withSerwistInstance = withSerwist({
   register: true,
   // Default is true: it would reload the page when the connection returns and wipe files the person is working on.
   reloadOnOnline: false,
-  // Heavy engines (/gs, /pdfjs) are NOT precached; they are cached on first use or via the offline button.
-  additionalPrecacheEntries: ROUTES.map((url) => ({ url, revision: BUILD_REV })),
-  globPublicPatterns: ["*.svg", "fonts/**/*", "icons/**/*", "screenshots/**/*", "gs-worker.js"],
+  // Heavy engines (/gs, /pdfjs, /qpdf, /ocr) are NOT precached; they are cached on first use or via the offline button.
+  additionalPrecacheEntries: [...ROUTES, ...PUBLIC_ASSETS].map((url) => ({ url, revision: BUILD_REV })),
   // Serwist needs devDisable; in dev we skip the SW entirely so hot reload stays simple.
   disable: isDev,
 });

@@ -251,7 +251,7 @@ export default function Home() {
             <Link href="/privacy" className="hover:text-cream">Privacy</Link>
             <Link href="/terms" className="hover:text-cream">Terms</Link>
             <Link href="/about" className="hover:text-cream">About</Link>
-            <Link href="/pro" className="hover:text-cream">Pro waitlist</Link>
+            <Link href="/pro" className="hover:text-cream">Pro</Link>
             <SourceLink className="hover:text-cream">Source on GitHub</SourceLink>
           </nav>
         </div>

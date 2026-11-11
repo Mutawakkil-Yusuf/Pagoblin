@@ -7,6 +7,8 @@ import { Toggle } from "@/components/ui/core";
 import { useSettings } from "@/lib/store/settings";
 import { useToolFiles } from "@/lib/store/docs";
 import { useDoneStore } from "@/lib/store/done";
+import { clearFlows } from "@/lib/store/flows";
+import { toast } from "@/lib/store/toasts";
 import { haptic } from "@/lib/haptics";
 import { VERSION } from "@/lib/version";
 import { Credit, SourceLink, IconGitHub } from "@/components/ui/Social";
@@ -17,25 +19,28 @@ import { usePwa } from "@/lib/pwa";
 export default function SettingsPage() {
   const s = useSettings();
   const { installed, deferred } = usePwa();
-  const clearToolFiles = useToolFiles((st) => st.clear);
+  const clearToolFiles = useToolFiles((st) => st.clearAll);
   const clearDone = useDoneStore((st) => st.clear);
 
   const clearAllData = () => {
-    clearToolFiles("home");
-    clearToolFiles("merge");
-    clearToolFiles("split");
-    clearToolFiles("compress");
-    clearToolFiles("convert");
-    clearToolFiles("sign");
-    clearDone();
-    s.clearAll();
-    try {
-      localStorage.clear();
-    } catch {
-      /* ignore */
-    }
-    haptic("success");
-    // flows are in IndexedDB and cleared on their screen to keep writes local
+    void (async () => {
+      clearToolFiles();
+      clearDone();
+      s.clearAll();
+      await clearFlows();
+      try {
+        localStorage.clear();
+      } catch {
+        /* ignore */
+      }
+      try {
+        if ("caches" in window) await caches.delete("share-target");
+      } catch {
+        /* no shared files */
+      }
+      haptic("success");
+      toast.success("Cleared. Nothing of yours is left on this device.");
+    })();
   };
 
   return (
@@ -94,20 +99,29 @@ export default function SettingsPage() {
         className="mt-4 min-h-[52px] w-full rounded-card-l border-2 border-line bg-surface px-5 text-left font-bold text-cream"
         onClick={clearAllData}
       >
-        Clear saved preferences and files
+        Clear saved preferences, files and flows
       </button>
 
       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Link href="/privacy" className="rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream">
+        <Link
+          href="/privacy"
+          className="inline-flex min-h-[44px] items-center rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream"
+        >
           Privacy
         </Link>
-        <Link href="/terms" className="rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream">
+        <Link
+          href="/terms"
+          className="inline-flex min-h-[44px] items-center rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream"
+        >
           Terms
         </Link>
-        <Link href="/about" className="rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream">
+        <Link
+          href="/about"
+          className="inline-flex min-h-[44px] items-center rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream"
+        >
           About
         </Link>
-        <SourceLink className="inline-flex items-center gap-2 rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream">
+        <SourceLink className="inline-flex min-h-[44px] items-center gap-2 rounded-card-l border border-line bg-surface px-4 py-3 font-bold text-cream">
           <IconGitHub size={18} /> Source
         </SourceLink>
       </div>
@@ -142,7 +156,7 @@ function Segmented(props: {
           role="radio"
           aria-checked={props.value === o.key}
           onClick={() => props.onChange(o.key)}
-          className={`min-h-[36px] rounded-pill px-3 text-small font-bold ${
+          className={`min-h-[44px] rounded-pill px-3.5 text-small font-bold ${
             props.value === o.key ? "bg-amber text-ink" : "text-muted"
           }`}
         >

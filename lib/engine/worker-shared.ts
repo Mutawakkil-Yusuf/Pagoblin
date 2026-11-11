@@ -3,6 +3,7 @@
  * cooperative cancellation, and pdf.js bootstrapping (loads inside this worker;
  * pdf.js spawns its own nested worker from /pdfjs/*).
  */
+import type { PdfData } from "./types";
 
 let cancelled = false;
 export function resetCancel() {
@@ -43,6 +44,15 @@ export async function readToArrayBuffer(file: File): Promise<ArrayBuffer> {
   return await file.arrayBuffer();
 }
 
+/**
+ * Normalise a PDF source inside the worker. Passing the original `File` keeps
+ * the main thread from making a second full-size copy before the job starts.
+ */
+export async function readPdfData(data: PdfData): Promise<ArrayBuffer> {
+  if (data instanceof ArrayBuffer) return data;
+  return await data.arrayBuffer();
+}
+
 let pdfjsLoading: Promise<typeof import("pdfjs-dist")> | null = null;
 
 /** Load pdf.js inside this worker. Prints to OffscreenCanvas; pdf.js spawns its
@@ -59,14 +69,15 @@ export function getPdfjs(): Promise<typeof import("pdfjs-dist")> {
 
 export type PdfDoc = Awaited<ReturnType<Awaited<ReturnType<typeof getPdfjs>>["getDocument"]>["promise"]>;
 
-export async function openPdf(data: ArrayBuffer): Promise<PdfDoc> {
+export async function openPdf(data: PdfData): Promise<PdfDoc> {
   const pdfjs = await getPdfjs();
-  const loadingTask = pdfjs.getDocument({ data: new Uint8Array(data), isEvalSupported: false });
+  const bytes = await readPdfData(data);
+  const loadingTask = pdfjs.getDocument({ data: new Uint8Array(bytes), isEvalSupported: false });
   return await loadingTask.promise;
 }
 
 /** Try opening a PDF and classify the failure for calm error copy. */
-export async function openPdfChecked(data: ArrayBuffer): Promise<PdfDoc> {
+export async function openPdfChecked(data: PdfData): Promise<PdfDoc> {
   try {
     return await openPdf(data);
   } catch (e) {
@@ -109,8 +120,7 @@ export function canvasToBlob(canvas: OffscreenCanvas, type: string, quality?: nu
  * in types. Views backed by a real ArrayBuffer pass cleanly.
  */
 export function u8Part(bytes: Uint8Array): BlobPart {
-  const ab = bytes.buffer as ArrayBuffer;
-  const copy = new Uint8Array(ab.byteLength);
+  const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
   return copy.buffer as ArrayBuffer;
 }

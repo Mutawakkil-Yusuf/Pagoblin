@@ -15,11 +15,30 @@ type ToolFiles = {
   remove: (tool: ToolKey, id: string) => void;
   reorder: (tool: ToolKey, ids: string[]) => void;
   clear: (tool: ToolKey) => void;
+  /** Drop every in-memory file and page count, for Settings → Clear. */
+  clearAll: () => void;
   setPageCount: (id: string, n: number) => void;
 };
 
 export const useToolFiles = create<ToolFiles>()((set) => ({
-  files: { home: [], merge: [], split: [], compress: [], convert: [], sign: [], flows: [], share: [] },
+  files: {
+    home: [],
+    merge: [],
+    split: [],
+    compress: [],
+    convert: [],
+    sign: [],
+    flows: [],
+    share: [],
+    organize: [],
+    protect: [],
+    metadata: [],
+    text: [],
+    redact: [],
+    form: [],
+    ocr: [],
+    batch: [],
+  },
   pageCount: {},
   add: (tool, items) =>
     set((s) => {
@@ -39,5 +58,16 @@ export const useToolFiles = create<ToolFiles>()((set) => ({
       return { files: { ...s.files, [tool]: next } };
     }),
   clear: (tool) => set((s) => ({ files: { ...s.files, [tool]: [] } })),
+  clearAll: () =>
+    set((s) => ({
+      files: Object.keys(s.files).reduce(
+        (acc, key) => {
+          acc[key as ToolKey] = [];
+          return acc;
+        },
+        {} as Record<ToolKey, FileItem[]>,
+      ),
+      pageCount: {},
+    })),
   setPageCount: (id, n) => set((s) => ({ pageCount: { ...s.pageCount, [id]: n } })),
 }));

@@ -2,20 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AppPage } from "@/components/nav/AppPage";
 import { Pip } from "@/components/pip/Pip";
+import { proFeatures } from "@/lib/entitlements";
 
 export const metadata: Metadata = {
   title: "Pagoblin Pro — pay once, keep Pip forever",
   description:
-    "Pro adds batch processing, saved-beyond-three flows, OCR and Office conversion. Pay once per device. Nowhere near launch, so no waitlist marketing.",
+    "Pro is a future extra: more saved flows and Office conversion. Every everyday tool, batch processing and OCR stay free, on your device.",
   alternates: { canonical: "/pro" },
 };
-
-const PRO_FEATURES = [
-  "Batch process dozens of files",
-  "Save and rerun your flows",
-  "OCR and table extraction",
-  "Word and PowerPoint, soon",
-];
 
 export default function ProPage() {
   return (
@@ -33,7 +27,7 @@ export default function ProPage() {
             <span className="font-display text-h3 font-extrabold text-amber">£0</span>
           </header>
           <ul className="mt-3 space-y-2 text-body text-muted">
-            <li>Every everyday tool</li>
+            <li>Every tool, including batch processing and OCR</li>
             <li>Lifetime — free means free, no accounts, no limits</li>
           </ul>
           <div className="mt-4 flex justify-center">
@@ -46,10 +40,10 @@ export default function ProPage() {
         <div className="rounded-card-l border-2 border-amber bg-surface p-5">
           <header className="flex items-baseline justify-between">
             <h2 className="font-display text-h3 font-extrabold">Pro</h2>
-            <span className="font-display text-h3 font-extrabold text-amber">[PRICE] once</span>
+            <span className="font-display text-h3 font-extrabold text-amber">Not yet priced</span>
           </header>
           <ul className="mt-3 space-y-2 text-body text-muted">
-            {PRO_FEATURES.map((f) => (
+            {proFeatures.map((f) => (
               <li key={f} className="flex items-start gap-2">
                 <span className="mt-[7px] h-[6px] w-[6px] shrink-0 rounded-full bg-amber" aria-hidden="true" />
                 <span>{f}</span>
@@ -57,9 +51,10 @@ export default function ProPage() {
             ))}
           </ul>
           <p className="mt-4 text-small text-muted">
-            Pro is not for sale yet. Office conversion needs a server — when it arrives it stays clearly
-            separate from the on-device tools, and it will be impossible to miss in the app. No pre-orders,
-            no marketing drip: this page is the list.
+            Pro is not for sale yet. Batch processing, OCR and every other on-device tool are free and stay
+            free. Office conversion needs a server — when it arrives it stays clearly separate from the
+            on-device tools, and it will be impossible to miss in the app. No pre-orders, no marketing drip:
+            this page is the list.
           </p>
         </div>
       </div>

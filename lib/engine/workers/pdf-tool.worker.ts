@@ -1,7 +1,7 @@
 /** pdf-tool worker: rotate pages and place signatures (small pdf-lib jobs). */
 import { PDFDocument, degrees } from "pdf-lib";
 import type { RotateInput, RotateOutput, SignPlaceInput, SignPlaceOutput } from "../types";
-import { assertNotCancelled, exposeJobs, resetCancel, u8Part } from "../worker-shared";
+import { assertNotCancelled, exposeJobs, readPdfData, resetCancel, u8Part } from "../worker-shared";
 
 async function rotate(input: RotateInput, onProgress: (p: number, label?: string) => void): Promise<RotateOutput> {
   resetCancel();
@@ -23,7 +23,8 @@ async function rotate(input: RotateInput, onProgress: (p: number, label?: string
 
 async function signPlace(input: SignPlaceInput, onProgress: (p: number, label?: string) => void): Promise<SignPlaceOutput> {
   resetCancel();
-  const doc = await PDFDocument.load(input.file, { ignoreEncryption: false });
+  const file = await readPdfData(input.file);
+  const doc = await PDFDocument.load(file, { ignoreEncryption: false });
   const img = await doc.embedPng(input.signaturePng);
   for (let i = 0; i < input.placements.length; i++) {
     assertNotCancelled();

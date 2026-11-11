@@ -49,6 +49,17 @@ export async function deleteFlow(id: string): Promise<void> {
   await d.delete("flows", id);
 }
 
+/** Remove every saved flow from this device (Settings → Clear). */
+export async function clearFlows(): Promise<void> {
+  const d = await db();
+  if (!d) return;
+  try {
+    await d.clear("flows");
+  } catch {
+    /* IndexedDB unavailable: nothing was saved here anyway */
+  }
+}
+
 /** Human label for a step, also used by the flow runner and the SEO page. */
 export function stepLabel(step: FlowStepConfig): string {
   switch (step.type) {

@@ -55,7 +55,7 @@ export function SignTool() {
   const [sigAR, setSigAR] = useState(4.2); // width/height of the signature art
   const [page, setPage] = useState(1);
   const [thumbUrl, setThumbUrl] = useState<string | null>(null);
-  const [pageAR, setPageAR] = useState(Math.SQRT2);
+  const [pageAR, setPageAR] = useState(1 / Math.SQRT2);
   const [placing, setPlacing] = useState({ x: 0.1, y: 0.74, w: 0.3, rot: 0 });
   const [scope, setScope] = useState<Scope>("this");
   const [busy, setBusy] = useState(false);
@@ -93,6 +93,7 @@ export function SignTool() {
   // Page preview render.
   useEffect(() => {
     let alive = true;
+    let url: string | null = null;
     if (!item) return;
     void (async () => {
       try {
@@ -100,7 +101,7 @@ export function SignTool() {
         const t = out.find((o) => o.page === page) ?? out[0];
         if (!alive) return;
         if (t) {
-          const url = URL.createObjectURL(t.blob);
+          url = URL.createObjectURL(t.blob);
           setThumbUrl(url);
           const bmp = await createImageBitmap(t.blob);
           setPageAR(bmp.width / bmp.height);
@@ -112,6 +113,7 @@ export function SignTool() {
     })();
     return () => {
       alive = false;
+      if (url) URL.revokeObjectURL(url);
     };
   }, [item, page]);
 
@@ -213,27 +215,75 @@ export function SignTool() {
 
   /* ---------- uploaded signature ---------- */
   const adoptUpload = (file: globalThis.File) => {
-    void (async () => {
-      const img = new Image();
-      img.onload = () => {
-        const maxW = 900;
-        const scale = img.width > maxW ? maxW / img.width : 1;
-        const c = document.createElement("canvas");
-        c.width = Math.round(img.width * scale);
-        c.height = Math.round(img.height * scale);
-        const ctx = c.getContext("2d");
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, c.width, c.height);
-        setSigUrl(c.toDataURL("image/png"));
-        setSigAR(c.width / c.height);
-        sound.play("toggle-on");
-      };
-      img.onerror = () => toast.error(fileErrors.imageExpected);
-      img.src = URL.createObjectURL(file);
-    })();
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const maxW = 900;
+      const scale = Math.min(1, maxW / img.width);
+      const c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.width * scale));
+      c.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = c.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      const image = ctx.getImageData(0, 0, c.width, c.height);
+      const data = image.data;
+      let minX = c.width;
+      let minY = c.height;
+      let maxX = -1;
+      let maxY = -1;
+      for (let y = 0; y < c.height; y++) {
+        for (let x = 0; x < c.width; x++) {
+          const i = (y * c.width + x) * 4;
+          // White paper becomes transparent; ink keeps its colour. Multiply by
+          // the original alpha so already-transparent pixels stay transparent.
+          const alpha = Math.round((255 - Math.min(data[i], data[i + 1], data[i + 2])) * (data[i + 3] / 255));
+          data[i + 3] = alpha;
+          if (alpha > 12) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < minX || maxY < minY) {
+        toast.error("That image looks blank. Try a signature with dark ink.");
+        return;
+      }
+      ctx.putImageData(image, 0, 0);
+      const pad = 6;
+      minX = Math.max(0, minX - pad);
+      minY = Math.max(0, minY - pad);
+      maxX = Math.min(c.width - 1, maxX + pad);
+      maxY = Math.min(c.height - 1, maxY + pad);
+      const trimmed = document.createElement("canvas");
+      trimmed.width = maxX - minX + 1;
+      trimmed.height = maxY - minY + 1;
+      trimmed
+        .getContext("2d")
+        ?.drawImage(c, minX, minY, trimmed.width, trimmed.height, 0, 0, trimmed.width, trimmed.height);
+      setSigUrl(trimmed.toDataURL("image/png"));
+      setSigAR(trimmed.width / trimmed.height);
+      sound.play("toggle-on");
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      toast.error(fileErrors.imageExpected);
+    };
+    img.src = objectUrl;
   };
 
-  const hFraction = placing.w * (pageAR / sigAR);
+  const hFraction = Math.min(placing.w * (pageAR / sigAR), 1 - placing.y);
+
+  // A signature can never be taller than the page space left below its top edge.
+  useEffect(() => {
+    setPlacing((p) => {
+      const maxW = Math.min(0.55, ((1 - p.y) * sigAR) / pageAR);
+      return p.w > maxW ? { ...p, w: Math.max(0.02, maxW) } : p;
+    });
+  }, [pageAR, sigAR]);
 
   const dragPlacing = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!sigUrl || !thumbArea.current) return;
@@ -258,19 +308,18 @@ export function SignTool() {
     sound.startLoop("chew");
     haptic("tap");
     try {
-      const buffer = await item.file.arrayBuffer();
       const bytes = dataUrlToArrayBuffer(sigUrl);
       const pages = scopePages();
       const out = await runSignPlace(
         {
-          file: buffer,
+          file: item.file,
           signaturePng: bytes,
           placements: pages.map((p) => ({
             pageIndex: p - 1,
             x: placing.x,
             y: placing.y,
             width: placing.w,
-            height: Math.min(hFraction, 1 - placing.y),
+            height: hFraction,
             rotation: placing.rot,
           })),
         },
@@ -325,7 +374,7 @@ export function SignTool() {
             <button
               type="button"
               aria-label="Remove file"
-              className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[18px] bg-ink/10 text-ink"
+              className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-[22px] bg-ink/10 text-ink"
               onClick={() => {
                 clear("sign");
                 sound.play("pop");
@@ -367,13 +416,18 @@ export function SignTool() {
                           aria-label={`Ink ${i.label.toLowerCase()}`}
                           aria-pressed={ink === i.value}
                           onClick={() => { setInk(i.value); sound.play("pop"); }}
-                          className={`h-[26px] w-[26px] rounded-full ${ink === i.value ? "outline outline-[3px] outline-amber" : ""}`}
-                          style={{ background: i.value }}
-                        />
+                          className="flex h-[44px] w-[44px] items-center justify-center rounded-full"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={`h-[26px] w-[26px] rounded-full ${ink === i.value ? "outline outline-[3px] outline-amber" : ""}`}
+                            style={{ background: i.value }}
+                          />
+                        </button>
                       ))}
                       <button
                         type="button"
-                        className="rounded-pill border-2 border-line px-3 py-1 font-bold text-[12px] text-cream"
+                        className="min-h-[44px] rounded-pill border-2 border-line px-3 font-bold text-[12px] text-cream"
                         onClick={() => {
                           const c = canvasRef.current;
                           const ctx = c?.getContext("2d");
@@ -413,9 +467,14 @@ export function SignTool() {
                           aria-label={`Ink ${i.label.toLowerCase()}`}
                           aria-pressed={ink === i.value}
                           onClick={() => { setInk(i.value); if (typed) adoptTyped(typed); else sound.play("pop"); }}
-                          className={`h-[26px] w-[26px] rounded-full ${ink === i.value ? "outline outline-[3px] outline-amber" : ""}`}
-                          style={{ background: i.value }}
-                        />
+                          className="flex h-[44px] w-[44px] items-center justify-center rounded-full"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={`h-[26px] w-[26px] rounded-full ${ink === i.value ? "outline outline-[3px] outline-amber" : ""}`}
+                            style={{ background: i.value }}
+                          />
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -462,16 +521,20 @@ export function SignTool() {
                       role="group"
                       aria-label="Page preview; drag the signature to place it"
                       className="relative mx-auto w-full max-w-[420px] touch-none overflow-hidden rounded-card bg-cream outline outline-2 outline-line"
-                      style={{ aspectRatio: "1 / 1", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      style={{ aspectRatio: String(pageAR), display: "flex", alignItems: "center", justifyContent: "center" }}
                       onPointerDown={dragPlacing}
                       onPointerMove={dragPlacing}
                     >
-                      <img
-                        src={thumbUrl ?? ""}
-                        alt={`Page ${page} preview`}
-                        className="h-full w-auto object-contain"
-                        draggable={false}
-                      />
+                      {thumbUrl ? (
+                        <img
+                          src={thumbUrl}
+                          alt={`Page ${page} preview`}
+                          className="h-full w-full object-contain"
+                          draggable={false}
+                        />
+                      ) : (
+                        <span className="skeleton absolute inset-0 block" aria-hidden="true" />
+                      )}
                       <img
                         src={sigUrl}
                         alt="Your signature on this page"
@@ -495,7 +558,13 @@ export function SignTool() {
                         min={8}
                         max={55}
                         value={Math.round(placing.w * 100)}
-                        onChange={(e) => setPlacing((p) => ({ ...p, w: Number(e.target.value) / 100 }))}
+                        onChange={(e) => {
+                          const next = Number(e.target.value) / 100;
+                          setPlacing((p) => {
+                            const maxW = Math.min(0.55, ((1 - p.y) * sigAR) / pageAR);
+                            return { ...p, w: Math.min(next, maxW) };
+                          });
+                        }}
                         aria-label="Signature size"
                       />
                     </label>

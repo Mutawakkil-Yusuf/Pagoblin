@@ -3,7 +3,7 @@
  * All numbers reported are measured. Never claims a size it did not compute.
  */
 import type { CompressInput, CompressOutput } from "../types";
-import { assertNotCancelled, exposeJobs, resetCancel, u8Part } from "../worker-shared";
+import { assertNotCancelled, exposeJobs, readPdfData, resetCancel, u8Part } from "../worker-shared";
 import { targetSizeSearch } from "../compress/targetSize";
 import type { CompressEngine } from "../compress/engine-types";
 import { gsCompressEngine } from "../compress/engine-gs";
@@ -33,7 +33,8 @@ async function main(input: CompressInput, onProgress: (p: number, label?: string
     onProgress(p, label);
   };
   progress(0.02, "Reading your file");
-  const before = input.file.byteLength;
+  const file = await readPdfData(input.file);
+  const before = file.byteLength;
 
   const engine = await pickEngine(input.engine);
   const usedFallback = input.engine !== "flatten" && engine.id !== "gs";
@@ -58,7 +59,7 @@ async function main(input: CompressInput, onProgress: (p: number, label?: string
     pass += 1;
     const n = pass;
     const r = await engine.attempt(
-      input.file,
+      file,
       input.fileName,
       dpi,
       () => assertNotCancelled(),
@@ -76,7 +77,7 @@ async function main(input: CompressInput, onProgress: (p: number, label?: string
   const bytesAt = async (dpi: number) => {
     const hit = cache.get(dpi);
     if (hit) return { size: hit.size, bytes: hit.bytes as Uint8Array | null };
-    return engine.attempt(input.file, input.fileName, dpi);
+    return engine.attempt(file, input.fileName, dpi);
   };
 
   const minDpi = 24;
@@ -113,7 +114,7 @@ async function main(input: CompressInput, onProgress: (p: number, label?: string
   // Already small enough: hand the file back untouched instead of re-encoding it for nothing.
   if (before <= explicitTarget) {
     progress(1, "Done");
-    return { blob: new Blob([input.file], { type: "application/pdf" }), before, after: before, engineUsed: engine.id === "flatten" || usedFallback ? "flatten" : "gs", attempts: [], reached: true };
+    return { blob: new Blob([file], { type: "application/pdf" }), before, after: before, engineUsed: engine.id === "flatten" || usedFallback ? "flatten" : "gs", attempts: [], reached: true };
   }
   pruneTarget = explicitTarget;
   const { attempts } = await targetSizeSearch({
@@ -148,11 +149,11 @@ async function main(input: CompressInput, onProgress: (p: number, label?: string
 }
 
 /** Never hand back a file that is bigger than the one we were given. */
-function keepSmaller(inp: CompressInput, out: CompressOutput): CompressOutput {
+function keepSmaller(inp: CompressInput, file: ArrayBuffer, out: CompressOutput): CompressOutput {
   if (out.after < out.before) return out;
   return {
     ...out,
-    blob: new Blob([inp.file], { type: "application/pdf" }),
+    blob: new Blob([file], { type: "application/pdf" }),
     after: out.before,
     reached: inp.target == null ? true : out.before <= inp.target,
   };
@@ -161,15 +162,17 @@ function keepSmaller(inp: CompressInput, out: CompressOutput): CompressOutput {
 exposeJobs({
   compress: async (input, p) => {
     const inp = input as CompressInput;
+    const file = await readPdfData(inp.file);
+    const normalized = { ...inp, file };
     try {
-      return keepSmaller(inp, await main(inp, p));
+      return keepSmaller(normalized, file, await main(normalized, p));
     } catch (e) {
       const err = e as Error;
       const keep = err.name === "CancelledError" || /canceled by job|password|encrypt/i.test(err.message) || inp.engine === "flatten";
       if (keep) throw e;
       // Engine A failed (WASM missing or blocked): degrade to Engine B instead of failing the job.
       console.warn("[pagoblin] Ghostscript failed, using the flatten fallback", e);
-      return keepSmaller(inp, await main({ ...inp, engine: "flatten" }, p));
+      return keepSmaller(normalized, file, await main({ ...normalized, engine: "flatten" }, p));
     }
   },
 });

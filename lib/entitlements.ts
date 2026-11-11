@@ -1,31 +1,21 @@
 /**
- * Entitlements. V1: everything is free. Pro later unlocks batch, saved flows
- * beyond 3, OCR, Office conversion. Gate only: more than 3 saved flows.
- * isPro reads a local flag today; a real licence check plugs in with no call
- * site changes.
+ * Entitlements. V1: everything is free, including batch processing and OCR.
+ * Pro is not for sale and only lists future extras (more saved flows beyond
+ * the free three, and Office conversion when a server-backed path exists).
+ * A real licence check plugs in here with no call-site changes.
  */
 export const FREE_FLOW_LIMIT = 3;
 
-let proOverride: boolean | null = null;
-if (typeof window !== "undefined") {
-  try {
-    const flag = new URLSearchParams(window.location.search).get("pro");
-    if (flag === "1") proOverride = true;
-    if (flag === "0") proOverride = false;
-  } catch {
-    /* ignore */
-  }
-}
-
 export function isPro(): boolean {
-  return proOverride ?? false;
+  // No licence exists yet, and no query-string flag may unlock one: a URL
+  // parameter is not a purchase and must not change what the app offers.
+  return false;
 }
 
 export const proFeatures = [
-  "Batch process dozens of files",
-  "Save and rerun your flows",
-  "OCR and table extraction",
-  "Word and PowerPoint, soon",
+  "More saved flows on this device",
+  "Word and PowerPoint, when it is ready",
+  "A way to support the project",
 ] as const;
 
 export const waitlistUrl =

@@ -16,7 +16,18 @@ function extOf(name: string): string {
 /** The name of the eventual download: "x.pdf", "x-pick-pages.pdf", or "x-pages.zip". */
 export function outputFileName(outputs: OutputBlob[], stem: string, ext: string): string {
   const base = safeStem(stem || "output");
-  if (outputs.length === 1) return `${base}.${ext}`;
+  if (outputs.length === 1) {
+    // Keep the tool's own name for a single result: "invoice-signed.pdf" is
+    // more useful than "sign.pdf". Sanitise it the same way as a fallback.
+    const own = outputs[0]?.name;
+    if (own) {
+      const dot = own.lastIndexOf(".");
+      const ownStem = dot > 0 ? own.slice(0, dot) : own;
+      const ownExt = dot > 0 ? own.slice(dot + 1) : ext;
+      return `${safeStem(ownStem)}.${ownExt}`;
+    }
+    return `${base}.${ext}`;
+  }
   return `${base}-pages.zip`;
 }
 
@@ -46,9 +57,13 @@ export function zipBlobs(outputs: OutputBlob[]): Promise<Blob> {
 export async function zipOutputs(outputs: OutputBlob[]): Promise<Blob> {
   const entries: Record<string, Uint8Array> = {};
   for (const o of outputs) {
-    let name = `${safeStem(o.name)}.${extOf(o.name)}`;
+    // Output names arrive with their extension; strip it before safeStem so
+    // zip entries do not end up as "file.pdf.pdf".
+    const ext = extOf(o.name);
+    const stem = safeStem(o.name.replace(/\.[^.]+$/, ""));
+    let name = `${stem}.${ext}`;
     let n = 1;
-    while (entries[name]) name = `${safeStem(o.name)} (${++n}).${extOf(o.name)}`;
+    while (entries[name]) name = `${stem} (${++n}).${ext}`;
     const ab = await o.blob.arrayBuffer();
     entries[name] = new Uint8Array(ab);
   }

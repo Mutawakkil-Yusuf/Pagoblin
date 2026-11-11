@@ -37,3 +37,17 @@ After pulling: run `npm install` (the postinstall copies Ghostscript to public/g
 - Offline pill ("Offline. Pip still works.").
 - Tested with the server fully stopped: pages open, Merge and Compress (Ghostscript) finish and reach the Done page.
 - Settings no longer shows the "Settings" heading twice.
+
+## Phase 1 review round
+
+- Large files: workers now receive the original `File` and read it inside the worker (`PdfData` + `readPdfData`). The main thread no longer copies a whole PDF before starting a job. OPFS was considered and rejected (extra disk copy, same peak memory).
+- Metadata: risk scanning is a single byte pass, not a full latin1 string decode. Sanitize also removes page-level `/Metadata`.
+- Redaction preview: uses the real rendered page aspect ratio, resets drawing state when changing pages, releases pointer capture, and is exposed as a described group rather than an application.
+- Sign: preview uses the real page aspect ratio and a skeleton instead of `src=""`; thumbnail URLs are revoked; uploaded signatures get white removed, transparent margins trimmed, and the width is clamped so the signature cannot overflow the page bottom.
+- Batch: Stop after this file is real; a second tap stops immediately. Finished outputs are still delivered, and the done copy says how many files were processed.
+- Protect: optional owner password, validated, with copy explaining that a blank owner password reuses the open password.
+- Forms: only fillable field values are sent to the worker, the fill button is disabled when nothing is editable, and read-only/unsupported fields are explained.
+- OCR: text mode reports recognised word counts; pages are passed as `File` references.
+- Settings: Clear now clears every tool store, done state, preferences, saved flows (IndexedDB) and the `share-target` cache. Toggles, segmented control, remove buttons, merge arrows, sign ink swatches and Clear are 44px targets.
+- Entitlements: removed the `?pro=1`/`?pro=0` URL override. Batch and OCR are described as free; Pro lists future extras only.
+- PWA: `public/icons/` was gitignored while the manifest referenced it. Icons are regenerated and tracked. Work-offline now warms qpdf and OCR assets too, with an honest ~45 MB label.

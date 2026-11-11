@@ -99,11 +99,11 @@ export function Toggle({
         haptic("tap");
         onToggle(!on);
       }}
-      className={`relative h-[40px] w-[68px] shrink-0 rounded-pill border-2 border-line ${on ? "bg-orange" : "bg-surface"}`}
+      className={`relative h-[44px] w-[72px] shrink-0 rounded-pill border-2 border-line ${on ? "bg-orange" : "bg-surface"}`}
     >
       <motion.span
-        className={`absolute left-[4px] top-[4px] h-[28px] w-[28px] rounded-full ${on ? "bg-ink" : "bg-dim"}`}
-        animate={{ x: on ? 28 : 0 }}
+        className={`absolute left-[4px] top-[4px] h-[32px] w-[32px] rounded-full ${on ? "bg-ink" : "bg-dim"}`}
+        animate={{ x: on ? 32 : 0 }}
         transition={{ type: "spring", ...springs.snappy }}
       />
     </button>

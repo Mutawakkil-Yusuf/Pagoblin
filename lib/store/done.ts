@@ -11,7 +11,18 @@ export type DoneToolKey =
   | "flow"
   | "pdf-to-image"
   | "image-to-pdf"
-  | "text-to-pdf";
+  | "text-to-pdf"
+  | "organize"
+  | "protect"
+  | "unlock"
+  | "metadata"
+  | "sanitize"
+  | "pdf-to-text"
+  | "pdf-to-markdown"
+  | "redact"
+  | "form"
+  | "ocr"
+  | "batch";
 
 export type DoneBlob = { blob: Blob; name: string; kind?: string; size?: number };
 
@@ -64,6 +75,28 @@ export const defaultHeadline = (tool: DoneToolKey, meta?: { reached?: boolean })
       return "Signed!";
     case "flow":
       return "Flow done!";
+    case "organize":
+      return "Organized!";
+    case "protect":
+      return "Locked!";
+    case "unlock":
+      return "Unlocked!";
+    case "metadata":
+      return "Metadata saved!";
+    case "sanitize":
+      return "Cleaned!";
+    case "pdf-to-text":
+      return "Text out!";
+    case "pdf-to-markdown":
+      return "Markdown out!";
+    case "redact":
+      return "Redacted!";
+    case "form":
+      return "Form filled!";
+    case "ocr":
+      return "Read!";
+    case "batch":
+      return "Batch done!";
     default:
       return "Done!";
   }

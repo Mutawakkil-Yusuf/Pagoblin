@@ -37,6 +37,7 @@ export const useSettings = create<Settings>()(
       markWelcomeSeen: () => set({ welcomeSeen: true }),
       markInstallCardShown: () => set({ installCardShown: true }),
       clearAll: () => {
+        setSoundMuted(false);
         set({
           soundOn: true,
           haptics: true,

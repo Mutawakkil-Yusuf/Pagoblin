@@ -10,10 +10,18 @@ import { springs } from "@/lib/motion";
 const TOOLS = [
   { href: "/merge-pdf", title: "Merge", sub: "Combine files", bg: "bg-amber" },
   { href: "/split-pdf", title: "Split", sub: "Pull out pages", bg: "bg-cream" },
+  { href: "/organize-pdf", title: "Organize", sub: "Reorder and rotate", bg: "bg-sky" },
   { href: "/compress-pdf", title: "Compress", sub: "Hit a target size", bg: "bg-orange" },
   { href: "/convert-pdf", title: "Convert", sub: "PDF and images", bg: "bg-peach" },
   { href: "/sign-pdf", title: "Sign", sub: "Draw or type", bg: "bg-sky" },
-  { href: "/flows", title: "Flows", sub: "Chain steps, save them", bg: "bg-surface border-2 border-amber" },
+  { href: "/protect-pdf", title: "Protect", sub: "Lock or unlock", bg: "bg-cream" },
+  { href: "/pdf-metadata", title: "Metadata", sub: "Inspect and clean", bg: "bg-peach" },
+  { href: "/pdf-to-text", title: "PDF to text", sub: "Text or Markdown", bg: "bg-amber" },
+  { href: "/redact-pdf", title: "Redact", sub: "Remove content", bg: "bg-orange" },
+  { href: "/form-pdf", title: "Forms", sub: "Fill and flatten", bg: "bg-sky" },
+  { href: "/ocr-pdf", title: "OCR", sub: "Searchable scans", bg: "bg-cream" },
+  { href: "/batch-pdf", title: "Batch", sub: "Queue and zip", bg: "bg-peach" },
+  { href: "/flows", title: "Flows", sub: "Chain steps, save them", bg: "bg-amber" },
 ] as const;
 
 export default function ToolsGrid() {

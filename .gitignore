@@ -10,4 +10,5 @@ test-results/
 # generated or copied from node_modules by postinstall / npm run icons
 public/pdfjs/
 public/gs/
-public/icons/
+public/qpdf/
+public/ocr/

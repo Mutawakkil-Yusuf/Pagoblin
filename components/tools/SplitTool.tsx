@@ -213,7 +213,7 @@ export function SplitTool() {
             <button
               type="button"
               aria-label="Remove file"
-              className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[18px] bg-ink/10 text-ink"
+              className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-[22px] bg-ink/10 text-ink"
               onClick={() => {
                 clear("split");
                 sound.play("pop");

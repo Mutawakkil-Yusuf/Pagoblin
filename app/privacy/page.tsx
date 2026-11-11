@@ -15,6 +15,7 @@ export default function PrivacyPage() {
       <h2 className="mt-8 font-display text-h2">The short version</h2>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-body">
         <li>Your files never leave your device. Every tool runs in your browser, inside Web Workers, with no upload code whatsoever.</li>
+        <li>The OCR engine, its language packs and the encryption engine are served by Pagoblin itself and run on your device.</li>
         <li>We have no accounts, no sign-up, no email capture.</li>
         <li>This build sets no cookies and runs no analytics.</li>
         <li>Saved flows live in your browser&rsquo;s IndexedDB, on your device only.</li>
@@ -22,11 +23,12 @@ export default function PrivacyPage() {
 
       <h2 className="mt-8 font-display text-h2">What happens when you use a tool</h2>
       <p className="mt-3 text-body">
-        The PDF or image you pick is read straight from your file system into the tab&rsquo;s memory. The
-        work (merge, split, squeeze, rasterise, sign) happens on your CPU. When you press download, the
-        finished file is produced by your browser from that same memory. Nothing is sent anywhere: the
-        app&rsquo;s Content-Security-Policy forbids outbound network connections, and the service worker
-        only caches the app&rsquo;s own files so it works offline.
+        The PDF or image you pick is read straight from your file system into the tab&rsquo;s memory, and
+        large files are passed to a worker as a File reference, so the bytes are read there instead of being copied on the main thread. The work
+        (merge, split, organise, squeeze, encrypt, sign, redact, read with OCR) happens on your CPU. When
+        you press download, the finished file is produced by your browser from that same memory. Nothing
+        is sent anywhere: the app&rsquo;s Content-Security-Policy forbids outbound network connections,
+        and the service worker only caches the app&rsquo;s own files so it works offline.
       </p>
 
       <h2 className="mt-8 font-display text-h2">How this could change</h2>

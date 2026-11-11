@@ -247,7 +247,7 @@ export function ConvertTool(props: { initialTab?: Tab; initialFormat?: "png" | "
                 <button
                   type="button"
                   aria-label="Remove file"
-                  className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[18px] bg-ink/10 text-ink"
+                  className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-[22px] bg-ink/10 text-ink"
                   onClick={() => {
                     remove("convert", pdfItem.id);
                     sound.play("pop");
@@ -293,7 +293,7 @@ export function ConvertTool(props: { initialTab?: Tab; initialFormat?: "png" | "
                   <button
                     type="button"
                     aria-label={`Remove ${im.name}`}
-                    className="ml-2 flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[16px] bg-line/60"
+                    className="ml-2 flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-[22px] bg-line/60"
                     onClick={() => {
                       remove("convert", im.id);
                       sound.play("pop");

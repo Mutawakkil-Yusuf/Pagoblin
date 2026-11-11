@@ -8,8 +8,8 @@ declare global {
 /**
  * Pagoblin service worker.
  * - Precaches the app shell (Serwist manifest from the build).
- * - Runtime-caches self-hosted engine assets (/pdfjs/*, /gs/*) so heavy
- *   engines are already on the device the second time.
+ * - Runtime-caches self-hosted engine assets (/pdfjs/*, /gs/*, /qpdf/*,
+ *   /ocr/*) so heavy engines are already on the device the second time.
  * - Handles Web Share Target POSTs: shared PDFs are stashed locally and the
  *   page reads them from the Cache API. File bytes never touch a network.
  */
@@ -29,7 +29,12 @@ const engineAssets: RuntimeCaching = {
   matcher: ({ url, request }) =>
     request.method === "GET" &&
     url.origin === self.location.origin &&
-    (url.pathname.startsWith("/pdfjs/") || url.pathname.startsWith("/gs/") || url.pathname === "/gs-worker.js"),
+    (url.pathname.startsWith("/pdfjs/") ||
+      url.pathname.startsWith("/gs/") ||
+      url.pathname.startsWith("/qpdf/") ||
+      url.pathname.startsWith("/ocr/") ||
+      url.pathname === "/gs-worker.js" ||
+      url.pathname === "/qpdf-worker.js"),
   handler: new CacheFirst({
     cacheName: "engine-assets",
     plugins: [new CacheableResponsePlugin({ statuses: [200] })],

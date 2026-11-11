@@ -69,9 +69,13 @@ export default function AppHome() {
             <div className="mt-3 flex snap-x gap-3 overflow-x-auto pb-4 no-scrollbar lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0">
               <QuickFix href="/merge-pdf" title="Merge files" tag="Drag to order" bg="bg-amber" tilt={-6} />
               <QuickFix href="/split-pdf" title="Split pages" tag="Pick ranges" bg="bg-peach" tilt={5} />
+              <QuickFix href="/organize-pdf" title="Organize" tag="Reorder pages" bg="bg-sky" tilt={-4} />
               <QuickFix href="/sign-pdf" title="Sign" tag="Draw or type" bg="bg-sky" tilt={-4} />
               <QuickFix href="/compress-pdf" title="Compress" tag="Hit a target" bg="bg-orange" tilt={4} />
               <QuickFix href="/convert-pdf" title="Convert" tag="PDF and images" bg="bg-peach" tilt={-5} />
+              <QuickFix href="/redact-pdf" title="Redact" tag="Remove content" bg="bg-orange" tilt={3} />
+              <QuickFix href="/ocr-pdf" title="OCR" tag="Read scans" bg="bg-cream" tilt={-5} />
+              <QuickFix href="/batch-pdf" title="Batch" tag="Queue and zip" bg="bg-amber" tilt={4} />
               <QuickFix href="/flows" title="Flows" tag="Chain steps" bg="bg-sky" tilt={3} />
             </div>
           </div>

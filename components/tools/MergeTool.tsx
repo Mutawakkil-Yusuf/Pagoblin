@@ -249,7 +249,7 @@ function SortableRow(props: {
       <button
         type="button"
         aria-label={`Drag ${props.item.name} to move`}
-        className="flex h-[44px] w-[30px] cursor-grab touch-none items-center justify-center"
+        className="flex h-[44px] w-[44px] cursor-grab touch-none items-center justify-center"
         {...attributes}
         {...listeners}
       >
@@ -265,16 +265,16 @@ function SortableRow(props: {
         </span>
       </span>
       <span className="flex items-center gap-0.5">
-        <button type="button" aria-label={`Move ${props.item.name} up`} className="hidden h-[36px] w-[26px] text-ink/70 hover:text-ink md:block" onClick={() => props.onMove(-1)}>
+        <button type="button" aria-label={`Move ${props.item.name} up`} className="hidden h-[44px] w-[44px] text-ink/70 hover:text-ink md:block" onClick={() => props.onMove(-1)}>
           ↑
         </button>
-        <button type="button" aria-label={`Move ${props.item.name} down`} className="hidden h-[36px] w-[26px] text-ink/70 hover:text-ink md:block" onClick={() => props.onMove(1)}>
+        <button type="button" aria-label={`Move ${props.item.name} down`} className="hidden h-[44px] w-[44px] text-ink/70 hover:text-ink md:block" onClick={() => props.onMove(1)}>
           ↓
         </button>
         <button
           type="button"
           aria-label={`Remove ${props.item.name}`}
-          className="flex h-[36px] w-[36px] items-center justify-center rounded-[18px] bg-ink/10 text-ink"
+          className="flex h-[44px] w-[44px] items-center justify-center rounded-[22px] bg-ink/10 text-ink"
           onClick={props.onRemove}
         >
           <IconClose width={16} height={16} />
