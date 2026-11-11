@@ -43,13 +43,63 @@ export function kindOf(file: File): FileKind {
   return "other";
 }
 
-const PDF_MAGIC = [0x25, 0x50, 0x44, 0x46]; // %PDF
+/** Read the first kilobyte once, for both kind sniffing and PDF validation. */
+const HEAD_BYTES = 1024;
+
+async function readHead(file: File): Promise<Uint8Array | null> {
+  try {
+    return new Uint8Array(await file.slice(0, HEAD_BYTES).arrayBuffer());
+  } catch {
+    return null;
+  }
+}
+
+function ascii(bytes: Uint8Array, start: number, length: number): string {
+  let out = "";
+  for (let i = start; i < start + length && i < bytes.length; i++) out += String.fromCharCode(bytes[i]);
+  return out;
+}
+
+/**
+ * The PDF spec allows the `%PDF-` header anywhere in the first 1024 bytes
+ * (some generators prepend junk). Checking only byte 0 rejected real files.
+ */
+function hasPdfHeader(bytes: Uint8Array): boolean {
+  const limit = Math.min(bytes.length, HEAD_BYTES) - 4;
+  for (let i = 0; i <= limit; i++) {
+    if (bytes[i] === 0x25 && bytes[i + 1] === 0x50 && bytes[i + 2] === 0x44 && bytes[i + 3] === 0x46) return true;
+  }
+  return false;
+}
+
+/** Guess a kind from the file's own bytes, for providers that send no MIME type. */
+function kindFromBytes(bytes: Uint8Array): FileKind | null {
+  if (!bytes.length) return null;
+  if (hasPdfHeader(bytes)) return "pdf";
+  if (bytes.length >= 8 && bytes[0] === 0x89 && ascii(bytes, 1, 3) === "PNG") return "image";
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image";
+  if (ascii(bytes, 0, 4) === "GIF8") return "image";
+  if (ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WEBP") return "image";
+  if (ascii(bytes, 4, 4) === "ftyp" && /^(heic|heix|hevc|heim|heis|hevm|hevs|mif1|msf1|avif)$/.test(ascii(bytes, 8, 4))) {
+    return "image";
+  }
+  // Plain text: no NULs and almost no control characters in the sample.
+  const sample = bytes.subarray(0, Math.min(bytes.length, 512));
+  let controls = 0;
+  for (const b of sample) {
+    if (b === 0) return null;
+    if (b < 0x09 || (b > 0x0d && b < 0x20)) controls += 1;
+  }
+  if (controls / sample.length < 0.02) return "text";
+  return null;
+}
 
 async function looksLikePdf(file: File): Promise<boolean> {
-  const head = await file.slice(0, 5).arrayBuffer();
-  const bytes = new Uint8Array(head);
-  if (bytes.length < 4) return false;
-  return PDF_MAGIC.every((b, i) => bytes[i] === b);
+  const bytes = await readHead(file);
+  // A provider that cannot hand over bytes yet is not proof of a bad file;
+  // let the worker try rather than rejecting a real PDF here.
+  if (!bytes || !bytes.length) return true;
+  return hasPdfHeader(bytes);
 }
 
 /** Size warning thresholds: 50 MB on phones, 100 MB on desktop. */
@@ -86,6 +136,7 @@ export const fileErrors = {
   unopenable: "Pip could not open that file. Try a smaller one.",
   password: "That PDF has a password. Unlock it first, then drop it here.",
   tooBig: "That file is too big for this device. Try a smaller one.",
+  reload: "Pagoblin updated in the background. Reload the page to keep going.",
   generic: "Something went wrong. Try again.",
 } as const;
 
@@ -102,18 +153,24 @@ export async function makeFileItems(
   const warnings: string[] = [];
 
   for (const file of files) {
-    const kind = kindOf(file);
+    let kind = kindOf(file);
     const label = file.name || "file";
 
     if (file.size === 0) {
       rejects.push({ name: label, reason: fileErrors.empty });
       continue;
     }
+    // Some Android/cloud providers hand over a blank MIME type and a name
+    // without an extension. The bytes themselves still say what the file is.
+    if (kind === "other") {
+      const head = await readHead(file);
+      const sniffed = head ? kindFromBytes(head) : null;
+      if (sniffed) kind = sniffed;
+    }
     const want = opts.accept.includes(kind);
     if (!want) {
-      if (kind === "pdf") rejects.push({ name: label, reason: fileErrors.pdfExpected });
-      else if (opts.accept.includes("pdf"))
-        rejects.push({ name: label, reason: fileErrors.notPdf });
+      if (opts.accept.includes("pdf")) rejects.push({ name: label, reason: fileErrors.notPdf });
+      else if (opts.accept.includes("image")) rejects.push({ name: label, reason: fileErrors.imageExpected });
       else rejects.push({ name: label, reason: fileErrors.pdfExpected });
       continue;
     }
@@ -163,19 +220,35 @@ export function pickFiles(opts: { accept?: string; multiple: boolean }): Promise
     input.style.pointerEvents = "none";
     document.body.appendChild(input);
     let settled = false;
+    let blurred = false;
+    let focusTimer = 0;
     const finish = () => {
       if (settled) return;
       settled = true;
       const files = Array.from(input.files ?? []);
+      window.clearTimeout(focusTimer);
+      window.clearTimeout(deadline);
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("focus", onFocus);
       input.remove();
       resolve(files);
     };
+    const onBlur = () => {
+      blurred = true;
+    };
+    // Only treat focus as "the picker closed" when the page was blurred first.
+    // Some Android builds fire focus as the picker OPENS; finishing then would
+    // remove the input and silently lose the choice.
+    const onFocus = () => {
+      if (!blurred) return;
+      window.clearTimeout(focusTimer);
+      focusTimer = window.setTimeout(finish, 1200);
+    };
+    const deadline = window.setTimeout(finish, 60_000);
     input.addEventListener("change", finish);
     input.addEventListener("cancel", finish);
-    // Fallback if neither event fires (some Android WebViews). The window regains focus
-    // BEFORE the change event on many browsers, so wait before reading the files.
-    window.addEventListener("focus", () => setTimeout(finish, 1500), { once: true });
-    setTimeout(finish, 60_000);
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("focus", onFocus);
     input.click();
   });
 }

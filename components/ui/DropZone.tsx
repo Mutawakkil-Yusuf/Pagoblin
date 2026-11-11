@@ -49,9 +49,12 @@ export function DropZone(props: {
   const openPicker = useCallback(async () => {
     if (disabled) return;
     const parts: string[] = [];
-    if (accept.includes("pdf")) parts.push("application/pdf", ".pdf");
-    if (accept.includes("image")) parts.push("image/*");
-    if (accept.includes("text")) parts.push("text/plain", ".txt");
+    // Extensions first: some Android pickers only read the first token. The
+    // octet-stream entry keeps PDFs selectable when a provider reports no type
+    // (otherwise DocumentsUI greys them out as "not supported").
+    if (accept.includes("pdf")) parts.push(".pdf", "application/pdf", "application/octet-stream");
+    if (accept.includes("image")) parts.push("image/*", ".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".heif");
+    if (accept.includes("text")) parts.push(".txt", ".md", ".csv", "text/plain", "text/markdown", "text/csv");
     // pickFiles clicks the input synchronously, inside the tap that called us (iOS needs that).
     const files = await pickFiles({ accept: parts.join(","), multiple: true });
     await handleFiles(files);

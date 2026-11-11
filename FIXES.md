@@ -52,3 +52,10 @@ After pulling: run `npm install` (the postinstall copies Ghostscript to public/g
 - Entitlements: removed the `?pro=1`/`?pro=0` URL override. Batch and OCR are described as free; Pro lists future extras only.
 - PWA: `public/icons/` was gitignored while the manifest referenced it. Icons are regenerated and tracked. Work-offline now warms qpdf and OCR assets too, with an honest ~45 MB label.
 - Rendering: pdf.js now gets `standardFontDataUrl` and `cMapUrl` from the self-hosted `/pdfjs/` assets. Without them, PDFs that use the standard 14 fonts or CJK CMaps drew boxes or dropped glyphs in thumbnails, PDF→image, redaction and OCR. `useSystemFonts` is off so every device uses the same bundled font data, and Work offline warms the standard font files as well.
+
+## Files rejected after a deploy
+
+- Ingestion: a file is now classified by its bytes when the provider sends no MIME type and a name without an extension (common with WhatsApp, Drive and some Android pickers). PDF headers are found anywhere in the first 1024 bytes, as the spec allows, instead of only at byte 0.
+- Picker: PDF tools ask for `.pdf`, `application/pdf` and `application/octet-stream`, with the extension first. Android pickers that only read one token, or that report an unknown type, no longer grey PDFs out as "not supported".
+- Picker: focus is only treated as "the picker closed" after the page was blurred first. Some Android builds fire focus while the picker is opening; finishing then removed the input and silently dropped the choice.
+- Updates: a new service worker claims the page immediately after a deploy, leaving the open tab on the previous build. Its worker chunks may already be gone, so every tool failed until a reload. The app now watches `controllerchange` and offers a Reload action, and a worker that cannot load fails fast with the same advice instead of hanging forever.

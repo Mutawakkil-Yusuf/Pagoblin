@@ -7,6 +7,7 @@ export function calmError(error: unknown, fallback: string): string {
   if (error instanceof EngineError) {
     if (error.code === "password") return fileErrors.password;
     if (error.code === "oom") return "That is too much for this device. Try fewer or smaller files.";
+    if (error.code === "stale") return fileErrors.reload;
     const message = error.message ?? "";
     if (/WinAnsi|cannot encode|encoding/i.test(message)) {
       return "Some text uses characters this PDF's form font cannot show. Try plain letters, or leave those fields for another app.";

@@ -9,6 +9,7 @@
  */
 import * as Comlink from "comlink";
 import { protectArgs, unlockArgs } from "./impl/qpdf";
+import { toast } from "@/lib/store/toasts";
 import type {
   CompressInput,
   CompressOutput,
@@ -59,8 +60,8 @@ export class CancelledError extends Error {
 }
 
 export class EngineError extends Error {
-  code: "password" | "oom" | "failed";
-  constructor(code: "password" | "oom" | "failed", detail?: unknown, raw?: Error) {
+  code: "password" | "oom" | "failed" | "stale";
+  constructor(code: "password" | "oom" | "failed" | "stale", detail?: unknown, raw?: Error) {
     super(
       raw && raw.message
         ? raw.message
@@ -70,6 +71,15 @@ export class EngineError extends Error {
     );
     this.code = code;
   }
+}
+
+/** The open tab is running chunks from an older build. Offer the only fix. */
+function promptReload() {
+  toast.action(
+    "Pagoblin updated. Reload to keep your tools working.",
+    { label: "Reload", onClick: () => window.location.reload() },
+    60_000,
+  );
 }
 
 export type JobOptions = {
@@ -102,6 +112,27 @@ function makeJobRunner<I, O>(makeWorker: () => Worker, kind: string): JobRunner<
       throw new CancelledError();
     }
     const api = Comlink.wrap<Comlink.Remote<AnyApi>>(worker);
+    // A missing worker chunk (an old page left open across a deploy) or a
+    // worker that dies before Comlink is ready would otherwise leave the job
+    // pending forever. Fail fast and say what to do about it.
+    let settled = false;
+    let rejectEarly: ((e: Error) => void) | null = null;
+    const earlyFailure = new Promise<never>((_, reject) => {
+      rejectEarly = (e) => {
+        if (!settled) reject(e);
+      };
+    });
+    earlyFailure.catch(() => {});
+    const staleError = () =>
+      new EngineError("stale", "Pagoblin updated in the background. Reload the page to keep going.");
+    const onWorkerError = (event: ErrorEvent) => {
+      const detail = event.message || "";
+      if (/load|fetch|import|404|mime/i.test(detail)) rejectEarly?.(staleError());
+      else rejectEarly?.(new EngineError("failed", detail || "The tool did not start. Try again."));
+    };
+    const onMessageError = () => rejectEarly?.(staleError());
+    worker.addEventListener("error", onWorkerError);
+    worker.addEventListener("messageerror", onMessageError);
     const progressProxy = Comlink.proxy((p: number, label?: string) => {
       onProgress?.(p, label);
     });
@@ -114,7 +145,7 @@ function makeJobRunner<I, O>(makeWorker: () => Worker, kind: string): JobRunner<
     };
     signal?.addEventListener("abort", askCancel, { once: true });
     try {
-      const result = (await api.run({ kind, input }, progressProxy)) as O;
+      const result = (await Promise.race([api.run({ kind, input }, progressProxy), earlyFailure])) as O;
       if (signal?.aborted) throw new CancelledError();
       return result;
     } catch (err) {
@@ -123,12 +154,19 @@ function makeJobRunner<I, O>(makeWorker: () => Worker, kind: string): JobRunner<
       if (signal?.aborted) throw new CancelledError();
       console.error("[pagoblin job failed]", kind, err);
       if (raw?.name === "CancelledError" || msg.includes("canceled by job")) throw new CancelledError();
+      if (err instanceof EngineError && err.code === "stale") {
+        promptReload();
+        throw err;
+      }
       // Comlink stacks arrive as string "Error: <msg>" sometimes.
       if (/password|encrypt/i.test(msg)) throw new EngineError("password", undefined, raw);
       if (/out of memory|Array buffer allocation|RangeError|allocation/i.test(msg)) throw new EngineError("oom", undefined, raw);
       throw new EngineError("failed", undefined, raw);
     } finally {
+      settled = true;
       signal?.removeEventListener("abort", askCancel);
+      worker.removeEventListener("error", onWorkerError);
+      worker.removeEventListener("messageerror", onMessageError);
       try {
         worker.terminate();
       } catch {
