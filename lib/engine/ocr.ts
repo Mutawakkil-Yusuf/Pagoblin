@@ -11,6 +11,7 @@
  */
 import { CancelledError, runPdfToImage } from "./client";
 import type { PdfData } from "./types";
+import { toWinAnsi } from "./impl/winansi";
 
 export type OcrLang = "eng" | "spa" | "fra" | "deu";
 export type OcrOutputMode = "pdf" | "text";
@@ -40,32 +41,6 @@ type OcrResult = {
   text: string;
   mode: OcrOutputMode;
 };
-
-/** PDF text needs WinAnsi-safe characters for the standard Helvetica font. */
-const PUNCT: Record<string, string> = {
-  "\u2018": "'",
-  "\u2019": "'",
-  "\u201A": "'",
-  "\u201C": '"',
-  "\u201D": '"',
-  "\u201E": '"',
-  "\u2013": "-",
-  "\u2014": "-",
-  "\u2026": "...",
-  "\u00A0": " ",
-};
-
-function winAnsi(text: string): string {
-  let out = "";
-  for (const ch of text) {
-    const mapped = PUNCT[ch] ?? ch;
-    for (const c of mapped) {
-      const code = c.codePointAt(0) ?? 0;
-      if ((code >= 0x20 && code <= 0x7e) || (code >= 0xa0 && code <= 0xff)) out += c;
-    }
-  }
-  return out.trim();
-}
 
 export async function ocrPdf(input: {
   file: PdfData;
@@ -158,7 +133,7 @@ export async function ocrPdf(input: {
           page.drawImage(jpg, { x: 0, y: 0, width: pageW, height: pageH });
 
           for (const rawWord of usableWords) {
-            const text = winAnsi(rawWord.text);
+            const text = toWinAnsi(rawWord.text);
             if (!text) continue;
             const box = rawWord.bbox;
             const boxH = Math.max(1, box.y1 - box.y0) / RENDER_SCALE;

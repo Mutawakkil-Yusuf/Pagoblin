@@ -6,6 +6,23 @@ export const OFFLINE_ASSETS = [
   "/gs/gs.js",
   "/gs/gs.wasm",
   "/pdfjs/pdf.worker.min.mjs",
+  // pdf.js renders non-embedded standard fonts from these bundled files. They
+  // are fetched on first render, so warm them too or a first offline preview
+  // of a Helvetica/Arial PDF would draw boxes.
+  "/pdfjs/standard_fonts/LiberationSans-Regular.ttf",
+  "/pdfjs/standard_fonts/LiberationSans-Bold.ttf",
+  "/pdfjs/standard_fonts/LiberationSans-Italic.ttf",
+  "/pdfjs/standard_fonts/LiberationSans-BoldItalic.ttf",
+  "/pdfjs/standard_fonts/FoxitFixed.pfb",
+  "/pdfjs/standard_fonts/FoxitFixedBold.pfb",
+  "/pdfjs/standard_fonts/FoxitFixedItalic.pfb",
+  "/pdfjs/standard_fonts/FoxitFixedBoldItalic.pfb",
+  "/pdfjs/standard_fonts/FoxitSerif.pfb",
+  "/pdfjs/standard_fonts/FoxitSerifBold.pfb",
+  "/pdfjs/standard_fonts/FoxitSerifItalic.pfb",
+  "/pdfjs/standard_fonts/FoxitSerifBoldItalic.pfb",
+  "/pdfjs/standard_fonts/FoxitSymbol.pfb",
+  "/pdfjs/standard_fonts/FoxitDingbats.pfb",
   "/qpdf-worker.js",
   "/qpdf/qpdf.js",
   "/qpdf/qpdf.wasm",

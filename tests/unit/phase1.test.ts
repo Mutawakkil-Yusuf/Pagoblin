@@ -6,6 +6,7 @@ import { fillFormMain, inspectFormMain } from "@/lib/engine/impl/forms";
 import { itemsToLines, linesToMarkdown, linesToPlainText } from "@/lib/engine/impl/text-extract";
 import { boxToPixels, normalizeBox } from "@/lib/engine/impl/redact";
 import { protectArgs, unlockArgs } from "@/lib/engine/impl/qpdf";
+import { toWinAnsi } from "@/lib/engine/impl/winansi";
 
 function ab(bytes: Uint8Array): ArrayBuffer {
   return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
@@ -211,5 +212,20 @@ describe("qpdf arguments", () => {
       }),
     ).toContain("--use-aes=y");
     expect(unlockArgs("secret")).toEqual(["--password=secret", "--decrypt", "/in.pdf", "/out.pdf"]);
+  });
+});
+
+describe("toWinAnsi", () => {
+  it("folds typographic punctuation instead of dropping it", () => {
+    expect(toWinAnsi("“Don’t” — wait…")).toBe('"Don\'t" - wait...');
+  });
+
+  it("keeps line breaks for text-to-PDF but trims OCR words", () => {
+    expect(toWinAnsi("one\ntwo", { keepWhitespace: true })).toBe("one\ntwo");
+    expect(toWinAnsi("  word  ")).toBe("word");
+  });
+
+  it("drops characters a standard font cannot encode", () => {
+    expect(toWinAnsi("café ą Ж ا")).toBe("café");
   });
 });

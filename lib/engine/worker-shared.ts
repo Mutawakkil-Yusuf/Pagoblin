@@ -72,7 +72,19 @@ export type PdfDoc = Awaited<ReturnType<Awaited<ReturnType<typeof getPdfjs>>["ge
 export async function openPdf(data: PdfData): Promise<PdfDoc> {
   const pdfjs = await getPdfjs();
   const bytes = await readPdfData(data);
-  const loadingTask = pdfjs.getDocument({ data: new Uint8Array(bytes), isEvalSupported: false });
+  const loadingTask = pdfjs.getDocument({
+    data: new Uint8Array(bytes),
+    isEvalSupported: false,
+    // PDFs that rely on the standard 14 fonts or CJK CMaps need these
+    // self-hosted files. Without them pdf.js warns and draws missing glyphs
+    // (boxes) in previews, PDF→image, redaction and OCR.
+    cMapUrl: "/pdfjs/cmaps/",
+    cMapPacked: true,
+    standardFontDataUrl: "/pdfjs/standard_fonts/",
+    // Always use the bundled font data, not whatever fonts the device happens
+    // to expose. That keeps previews and raster output consistent offline.
+    useSystemFonts: false,
+  });
   return await loadingTask.promise;
 }
 

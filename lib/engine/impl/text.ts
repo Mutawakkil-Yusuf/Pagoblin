@@ -6,6 +6,7 @@
 import { PDFDocument } from "pdf-lib";
 import type { TextToPdfInput, TextToPdfOutput } from "../types";
 import { assertNotCancelled, resetCancel, u8Part } from "../worker-shared";
+import { toWinAnsi } from "./winansi";
 
 /** Wrap text into lines for one Helvetica-ish page (A4). */
 function wrappedLinesForPdf(text: string, maxChars: number): string[][] {
@@ -43,7 +44,7 @@ export async function textToPdfMain(
 ): Promise<TextToPdfOutput> {
   resetCancel();
   const doc = await PDFDocument.create();
-  const sanitized = input.text.replace(/[^\x00-\xFF]/g, "");
+  const sanitized = toWinAnsi(input.text, { keepWhitespace: true });
   const charsPerLine = 84;
   const pages = wrappedLinesForPdf(sanitized, charsPerLine);
   const font = await doc.embedFont("Helvetica");

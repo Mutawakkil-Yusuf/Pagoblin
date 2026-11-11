@@ -84,4 +84,11 @@ describe("textToPdfMain (the real worker core)", () => {
     const out = await textToPdfMain({ text });
     expect(out.pages).toBeGreaterThan(1);
   });
+
+  it("folds curly punctuation and skips characters the font cannot show", async () => {
+    const out = await textToPdfMain({ text: "“Don’t” — café ą Ж" });
+    expect(out.pages).toBe(1);
+    const check = await PDFDocument.load(await blobBytes(out.blob));
+    expect(check.getPageCount()).toBe(1);
+  });
 });

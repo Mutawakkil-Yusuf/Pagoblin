@@ -324,6 +324,9 @@ export function ConvertTool(props: { initialTab?: Tab; initialFormat?: "png" | "
             placeholder="Type here. What you type becomes a clean A4 PDF."
             className="w-full rounded-card-l border-2 border-line bg-surface px-4 py-3.5 font-bold text-cream outline-none focus:border-amber"
           />
+          <p className="text-small text-muted">
+            Uses a built-in Latin font. Arabic, CJK and emoji cannot be shown and are left out.
+          </p>
           {textItem ? (
             <p className="text-small text-muted">A text file ({textItem.name}) is waiting too — press the button to use it.</p>
           ) : null}
