@@ -34,8 +34,6 @@ const SOURCE_FILES = [
   "vitest.config.ts",
   "playwright.config.ts",
   "README.md",
-  "DECISIONS.md",
-  "FIXES.md",
   "LICENSE",
   "THIRD_PARTY_NOTICES.md",
   ".gitignore",

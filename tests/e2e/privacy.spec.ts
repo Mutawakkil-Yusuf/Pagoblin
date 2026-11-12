@@ -6,7 +6,7 @@
  * was ever made and (b) no non-local request body carries the marker.
  *
  * Runs only where a chromium can launch; on this ARM device the browsers
- * crash under kernel seccomp, so tests skip (see DECISIONS.md).
+ * crash under kernel seccomp, so tests skip.
  */
 import { test, expect, type Page } from "@playwright/test";
 import { PDFDocument } from "pdf-lib";

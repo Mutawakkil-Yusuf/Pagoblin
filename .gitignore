@@ -15,3 +15,10 @@ public/pdfjs/
 public/gs/
 public/qpdf/
 public/ocr/
+
+# private notes and design references kept on the author's machine only
+DECISIONS.md
+FIXES.md
+design-kit/AGENTS.md
+design-kit/references/
+pagoblin-brand-kit.zip

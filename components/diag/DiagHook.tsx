@@ -3,7 +3,7 @@
 /**
  * TEMPORARY field diagnostics: any window error or unhandled promise
  * rejection shows in a fixed banner so problems can be read off the phone.
- *Remove once the tool breakage is identified (see DECISIONS.md).
+ * Remove once the tool breakage is identified.
  */
 import { useEffect, useState } from "react";
 

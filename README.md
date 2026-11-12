@@ -57,7 +57,7 @@ npm run og         # regenerate public/og.png from the brand SVG and DejaVu font
 ```
 
 On ARM/small-memory machines run builds with
-`NODE_OPTIONS=--max-old-space-size=3072` (see `DECISIONS.md`).
+`NODE_OPTIONS=--max-old-space-size=3072`.
 
 ## Privacy guarantee (the whole point)
 
@@ -75,11 +75,8 @@ On ARM/small-memory machines run builds with
   unique marker in a generated PDF, runs the compress tool, and asserts no
   request ever leaves the origin or carries the marker.
 
-See `DECISIONS.md` for every inference and workaround (Android-kernel nft
-patch, TS version pin, self-hosted fonts, worker literal-URL bundling, the
-Phase 1 file-to-worker decision, the Phase 2 proof/sanitizer/Verify cut, and the
-Phase 3 distribution-first decision: SEO, honest comparisons, docs/status and
-launch kit, with Pro still not for sale).
+The code and tests are the reference for the implementation. Internal build
+notes and workarounds are not part of the public repository.
 
 
 ## Distribution and licensing
